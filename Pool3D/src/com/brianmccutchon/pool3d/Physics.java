@@ -6,12 +6,6 @@ public class Physics {
 
 	public static final double EPSILON = Math.pow(10.0, -15);
 
-	private static double[][] reverser = {
-			{ 1, -1, -1},
-			{-1,  1,  1},
-			{-1,  1,  1}
-		};
-
 	/**
 	 * Computes the new velocity vectors of two pool balls that have been
 	 * determined to be intersecting.
@@ -29,25 +23,11 @@ public class Physics {
 		ball2.velocity.x = tmp;
 
 		// Reverse the rotation matrix
-		//invertMat(rotMatrix);
 		transposeSquareMat(rotMatrix);
-		//arrayMult(rotMatrix, reverser);
 
 		// rotate back
 		rotateVec(ball1.velocity, rotMatrix);
 		rotateVec(ball2.velocity, rotMatrix);
-	}
-
-	static void invertMat(double[][] matrix) {
-		transposeSquareMat(matrix);
-	}
-
-	private static void arrayMult(double[][] rotMatrix, double[][] reverser2) {
-		for (int i = 0; i < rotMatrix.length; i++) {
-			for (int j = 0; j < rotMatrix[i].length; j++) {
-				rotMatrix[i][j] *= reverser2[i][j];
-			}
-		}
 	}
 
 	/**

@@ -42,31 +42,6 @@ public class PhysTest {
 		return det;
 	}
 
-	//@Test
-	public void testInvertMat() {
-		double[][] testMat = new double[3][3];
-		for (double[] row : testMat) {
-			for (int i = 0; i < row.length; i++) {
-				row[i] = Math.random() * 100;
-			}
-		}
-
-		double[][] inverse = cloneMat(testMat);
-		Physics.invertMat(inverse);
-
-		assertArrayEquals(matMult(testMat, inverse), identity);
-	}
-
-	private double[][] matMult(double[][] testMat, double[][] inverse) {
-		double[][] retVal = new double[testMat.length][testMat[0].length];
-		for (int i = 0; i < testMat.length; i++) {
-			for (int j = 0; j < testMat.length; j++) {
-
-			}
-		}
-		return retVal;
-	}
-
 	private double[][] cloneMat(double[][] testMat) {
 		double[][] retVal = new double[testMat.length][testMat[0].length];
 		for (int i = 0; i < testMat.length; i++) {
