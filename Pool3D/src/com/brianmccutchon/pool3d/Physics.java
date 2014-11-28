@@ -94,6 +94,14 @@ public class Physics {
 				v.x * m[2][0] + v.y * m[2][1] + v.z * m[2][2]);
 	}
 
+	/**
+	 * Returns true if the values provided are approximately equal.
+	 * 
+	 * @param d1 A value to compare.
+	 * @param d2 The other value to compare.
+	 * @return {@code true} if and only if d1 and d2 are within
+	 * {@link Physics#EPSILON} of each other.
+	 */
 	private static boolean almostEq(double d1, double d2) {
 		return Math.abs(d1 - d2) < EPSILON;
 	}
