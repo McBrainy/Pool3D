@@ -82,11 +82,11 @@ public class Physics {
 		double distanceY = Math.hypot(ball2loc.x, ball2loc.y);
 		double distanceZ = Math.hypot(ball2loc.x, ball2loc.z);
 
-		// TODO avoid div by zero somehow
-		double sinZ = -ball2loc.y / distanceY;
-		double sinY = -ball2loc.z / distanceZ;
-		double cosZ =  ball2loc.x / distanceY;
-		double cosY =  ball2loc.x / distanceZ;
+		// TODO Get rid of check for zero, if possible
+		double sinZ = almostEq(0.0, distanceY) ? 0.0 : -ball2loc.y / distanceY;
+		double sinY = almostEq(0.0, distanceZ) ? 0.0 : -ball2loc.z / distanceZ;
+		double cosZ = almostEq(0.0, distanceY) ? 1.0 :  ball2loc.x / distanceY;
+		double cosY = almostEq(0.0, distanceZ) ? 1.0 :  ball2loc.x / distanceZ;
 
 		// TODO Make sure this works for rotations around the y axis
 		return new double[][] {
