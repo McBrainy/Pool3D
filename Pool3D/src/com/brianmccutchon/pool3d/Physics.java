@@ -17,6 +17,14 @@ public class Physics {
 		rotateVec(ball1.velocity, rotMatrix);
 		rotateVec(ball2.velocity, rotMatrix);
 
+		// Check that the balls really are colliding; that is, if left to
+		// themselves and no other balls/walls/pockets interfere, they will be
+		// closer together in the next instant, by some definition of instant.
+		// TODO Add a unit test for this.
+		if (ball2.velocity.x - ball1.velocity.x < 0) {
+			return;
+		}
+
 		// switch x values
 		double tmp = ball1.velocity.x;
 		ball1.velocity.x = ball2.velocity.x;
