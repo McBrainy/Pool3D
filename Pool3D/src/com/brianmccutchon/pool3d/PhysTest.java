@@ -86,16 +86,7 @@ public class PhysTest {
 		ball1.velocity.setLocation( 1, 0, 0);
 		ball2.velocity.setLocation(-1, 0, 0);
 
-		double[][] rotationMat = Physics.findCollisionRotationMat(ball1, ball2);
-
-		// Every rotation matrix should have a determinant of 1.0
-		assertEquals(1.0, determinant(rotationMat), Physics.EPSILON);
-
-		Point3D p = ball1.location.subtract(ball2.location);
-		Physics.rotateVec(p, rotationMat);
-
-		assertEquals(0.0, p.y, Physics.EPSILON);
-		assertEquals(0.0, p.z, Physics.EPSILON);
+		checkRotationMat(ball1, ball2);
 
 		// Now with a nonzero y in velocity
 		ball1.location.setLocation(2, 2, 2);
@@ -104,16 +95,10 @@ public class PhysTest {
 		ball1.velocity.setLocation(0, 0, 0);
 		ball2.setVelocity(new Point3D(-Math.sqrt(2), -Math.sqrt(2), 0));
 
-		rotationMat = Physics.findCollisionRotationMat(ball1, ball2);
+		checkRotationMat(ball1, ball2);
 
-		// Every rotation matrix should have a determinant of 1.0
-		assertEquals(1.0, determinant(rotationMat), Physics.EPSILON);
-
-		p = ball2.location.subtract(ball1.location);
-		Physics.rotateVec(p, rotationMat);
-
-		assertEquals(0.0, p.y, Physics.EPSILON);
-		assertEquals(0.0, p.z, Physics.EPSILON);
+		// Now a rotation around the y axis
+		ball1.location.setLocation(-2, -3, -5);
 
 		// Now with more irregular coords -- dist is about 1.73
 		ball1.location.setLocation(5, 4, 3);
@@ -122,11 +107,16 @@ public class PhysTest {
 		ball1.velocity.setLocation(2, 2, 2);
 		ball2.velocity.setLocation(0, 0, 0);
 
-		rotationMat = Physics.findCollisionRotationMat(ball1, ball2);
-		
+		checkRotationMat(ball1, ball2);
+	}
+
+	private void checkRotationMat(PoolBall ball1, PoolBall ball2) {
+		double[][] rotationMat = Physics.findCollisionRotationMat(ball1, ball2);
+
+		// Every rotation matrix should have a determinant of 1.0
 		assertEquals(1.0, determinant(rotationMat), Physics.EPSILON);
 
-		p = ball2.location.subtract(ball1.location);
+		Point3D p = ball2.location.subtract(ball1.location);
 		Physics.rotateVec(p, rotationMat);
 
 		assertEquals(0.0, p.y, Physics.EPSILON);
