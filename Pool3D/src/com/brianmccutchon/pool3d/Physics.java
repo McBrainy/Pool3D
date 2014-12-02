@@ -96,6 +96,7 @@ public class Physics {
 		// The dot product gives the cos of rotation
 		double cos = ball2loc.dot(X_UNIT_VEC);
 
+		// The matrix below only works if the axis is a unit vector
 		if (almostEq(a.dist(ORIGIN), 0)) {
 			a = Y_UNIT_VEC;
 		} else {
@@ -103,9 +104,9 @@ public class Physics {
 		}
 
 		return new double[][] {
-			{ cos+a.x*a.x*(1-cos), a.x*a.y*(1-cos)-a.z*sin, a.x*a.z*(1-cos)+a.y*sin },
-			{ a.y*a.x*(1-cos)+a.z*sin, cos+a.y*a.y*(1-cos), a.y*a.z*(1-cos)-a.x*sin },
-			{ a.z*a.x*(1-cos)-a.y*sin, a.z*a.y*(1-cos)+a.x*sin, cos+a.z*a.z*(1-cos) }
+			{cos+a.x*a.x*(1-cos), a.x*a.y*(1-cos)-a.z*sin, a.x*a.z*(1-cos)+a.y*sin},
+			{a.y*a.x*(1-cos)+a.z*sin, cos+a.y*a.y*(1-cos), a.y*a.z*(1-cos)-a.x*sin},
+			{a.z*a.x*(1-cos)-a.y*sin, a.z*a.y*(1-cos)+a.x*sin, cos+a.z*a.z*(1-cos)}
 		};
 	}
 
