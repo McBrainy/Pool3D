@@ -24,6 +24,11 @@ public class PhysTest {
 				new double[][]{{0, 1, 0}, {0, 0, -1}, {-1, 0, 0}}), 0.0);
 	}
 
+	/**
+	 * Computes the determinant of a 3x3 matrix.
+	 * @param mat A 3x3 matrix.
+	 * @return The determinant of mat.
+	 */
 	private double determinant(double[][] mat) {
 		int n = mat.length;
 		if (n != 3) {
@@ -48,34 +53,29 @@ public class PhysTest {
 		PoolBall ball2 = new PoolBall(
 				PoolBall.DIAMETER - Physics.EPSILON, 0, 0, null, null, 1);
 
-		checkRotationMat(ball1, ball2);
-		
 		// No rotation required, should return the identity matrix
 		assertArrayEquals(identity,
 				Physics.findCollisionRotationMat(ball1, ball2));
 
-		// Now with a nonzero y in velocity
-		ball1 = new PoolBall(2, 2, 2, null, null, 0);
-		ball2 = new PoolBall(2 + Math.sqrt(PoolBall.DIAMETER),
-				2 + Math.sqrt(PoolBall.DIAMETER), 2, null, null, 0);
+		checkRotationMat(new Point3D(2, 2, 2),
+				new Point3D(2 + Math.sqrt(PoolBall.DIAMETER),
+						2 + Math.sqrt(PoolBall.DIAMETER), 2));
 
-		checkRotationMat(ball1, ball2);
+		checkRotationMat(new Point3D(-2, -3, -5),
+				new Point3D(-2, -3 - Math.sqrt(PoolBall.DIAMETER),
+						-5 + Math.sqrt(PoolBall.DIAMETER)));
 
-		// Now a rotation around the y axis
-		ball1 = new PoolBall(-2, -3, -5, null, null, 0);
-		ball2 = new PoolBall(-2, -3 - Math.sqrt(PoolBall.DIAMETER),
-				-5 + Math.sqrt(PoolBall.DIAMETER), null, null, 0);
-
-		checkRotationMat(ball1, ball2);
-
-		// Now with more irregular coords -- dist is about 1.73
-		ball1 = new PoolBall(5, 4, 3, null, null, 0);
-		ball2 = new PoolBall(6, 5, 2, null, null, 0);
-
-		checkRotationMat(ball2, ball1);
+		checkRotationMat(new Point3D(5, 4, 3), new Point3D(6, 5, 2));
 	}
 
-	private void checkRotationMat(PoolBall ball1, PoolBall ball2) {
+	/**
+	 * Performs assertions to ensure that the rotation matrix is computed
+	 * correctly for the two pool balls provided.
+	 */
+	private void checkRotationMat(Point3D p1, Point3D p2) {
+		PoolBall ball1 = new PoolBall(p1.x, p1.y, p1.z, null, null, 0);
+		PoolBall ball2 = new PoolBall(p2.x, p2.y, p2.z, null, null, 0);
+		
 		double[][] rotationMat =
 				Physics.findCollisionRotationMat(ball1, ball2);
 
@@ -115,7 +115,7 @@ public class PhysTest {
 		ball2 = new PoolBall(2 + Math.sqrt(PoolBall.DIAMETER),
 				2 + Math.sqrt(PoolBall.DIAMETER), 2, null, null, 0);
 		ball1.velocity.setLocation(0, 0, 0);
-		ball2.setVelocity(new Point3D(-Math.sqrt(2), -Math.sqrt(2), 0));
+		ball2.velocity.setLocation(-Math.sqrt(2), -Math.sqrt(2), 0);
 
 		Physics.handleCollision(ball1, ball2);
 
