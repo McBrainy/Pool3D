@@ -42,45 +42,35 @@ public class PhysTest {
 		return det;
 	}
 
-	private double[][] cloneMat(double[][] testMat) {
-		double[][] retVal = new double[testMat.length][testMat[0].length];
-		for (int i = 0; i < testMat.length; i++) {
-			for (int j = 0; j < testMat.length; j++) {
-				retVal[i][j] = testMat[i][j];
-			}
-		}
-		return retVal;
-	}
-
 	@Test
 	public void testRotationMat() {
 		PoolBall ball1 = new PoolBall(0, 0, 0, null, null, 0);
 		PoolBall ball2 = new PoolBall(
 				PoolBall.DIAMETER - Physics.EPSILON, 0, 0, null, null, 1);
 
-		ball1.velocity.setLocation( 1, 0, 0);
-		ball2.velocity.setLocation(-1, 0, 0);
-
 		checkRotationMat(ball1, ball2);
+		
+		// No rotation required, should return the identity matrix
+		assertArrayEquals(identity,
+				Physics.findCollisionRotationMat(ball1, ball2));
 
 		// Now with a nonzero y in velocity
-		ball1.location.setLocation(2, 2, 2);
-		ball2.location.setLocation(2 + Math.sqrt(PoolBall.DIAMETER),
-				2 + Math.sqrt(PoolBall.DIAMETER), 2);
-		ball1.velocity.setLocation(0, 0, 0);
-		ball2.setVelocity(new Point3D(-Math.sqrt(2), -Math.sqrt(2), 0));
+		ball1 = new PoolBall(2, 2, 2, null, null, 0);
+		ball2 = new PoolBall(2 + Math.sqrt(PoolBall.DIAMETER),
+				2 + Math.sqrt(PoolBall.DIAMETER), 2, null, null, 0);
 
 		checkRotationMat(ball1, ball2);
 
 		// Now a rotation around the y axis
-		ball1.location.setLocation(-2, -3, -5);
+		ball1 = new PoolBall(-2, -3, -5, null, null, 0);
+		ball2 = new PoolBall(-2, -3 - Math.sqrt(PoolBall.DIAMETER),
+				-5 + Math.sqrt(PoolBall.DIAMETER), null, null, 0);
+
+		checkRotationMat(ball1, ball2);
 
 		// Now with more irregular coords -- dist is about 1.73
-		ball1.location.setLocation(5, 4, 3);
-		ball2.location.setLocation(6, 5, 2);
-
-		ball1.velocity.setLocation(2, 2, 2);
-		ball2.velocity.setLocation(0, 0, 0);
+		ball1 = new PoolBall(5, 4, 3, null, null, 0);
+		ball2 = new PoolBall(6, 5, 2, null, null, 0);
 
 		checkRotationMat(ball1, ball2);
 	}
@@ -120,9 +110,9 @@ public class PhysTest {
 		assertEquals(new Point3D( 1, 0, 0), ball2.velocity);
 
 		// Now with a nonzero y in velocity
-		ball1.location.setLocation(2, 2, 2);
-		ball2.location.setLocation(2 + Math.sqrt(PoolBall.DIAMETER),
-				2 + Math.sqrt(PoolBall.DIAMETER), 2);
+		ball1 = new PoolBall(2, 2, 2, null, null, 0);
+		ball2 = new PoolBall(2 + Math.sqrt(PoolBall.DIAMETER),
+				2 + Math.sqrt(PoolBall.DIAMETER), 2, null, null, 0);
 		ball1.velocity.setLocation(0, 0, 0);
 		ball2.setVelocity(new Point3D(-Math.sqrt(2), -Math.sqrt(2), 0));
 
@@ -133,8 +123,8 @@ public class PhysTest {
 		assertEquals(          0.0, ball1.velocity.z, Physics.EPSILON);
 
 		// Now with more irregular coords -- dist is about 1.73
-		ball1.location.setLocation(5, 4, 3);
-		ball2.location.setLocation(6, 5, 2);
+		ball1 = new PoolBall(5, 4, 3, null, null, 0);
+		ball2 = new PoolBall(6, 5, 2, null, null, 0);
 
 		ball1.velocity.setLocation(2, 2, 2);
 		ball2.velocity.setLocation(0, 0, 0);
