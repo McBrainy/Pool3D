@@ -82,7 +82,7 @@ public class PhysTest {
 		// Every rotation matrix should have a determinant of 1.0
 		assertEquals(1.0, determinant(rotationMat), Physics.EPSILON);
 
-		Point3D p = ball2.location.subtract(ball1.location);
+		Point3D p = ball2.center.subtract(ball1.center);
 		Physics.rotateVec(p, rotationMat);
 
 		assertEquals(0.0, p.y, Physics.EPSILON);

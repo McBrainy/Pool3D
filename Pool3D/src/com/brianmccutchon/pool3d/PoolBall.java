@@ -18,8 +18,8 @@ public class PoolBall {
 
 	private static final double DIAMETER_SQUARED = DIAMETER*DIAMETER;
 
-	/** The current location the center of this pool ball. **/
-	public final Point3D location;
+	/** The current location of the center of this pool ball. **/
+	public final Point3D center;
 
 	/** The velocity vector of this ball. **/
 	public final Point3D velocity;
@@ -85,7 +85,7 @@ public class PoolBall {
 	 */
 	public PoolBall(double x, double y, double z,
 			Color hue, BallType type, int ballNum) {
-		location = new Point3D(x, y, z);
+		center = new Point3D(x, y, z);
 		this.hue = hue;
 		this.type = type;
 		this.ballNum = ballNum;
@@ -143,7 +143,7 @@ public class PoolBall {
 
 	/** Determines if this pool ball intersects with another pool ball. **/
 	public boolean intersects(PoolBall pb) {
-		return location.distSq(pb.location) < DIAMETER_SQUARED;
+		return center.distSq(pb.center) < DIAMETER_SQUARED;
 	}
 
 	/**
@@ -152,7 +152,7 @@ public class PoolBall {
 	 * @param p The location to set.
 	 */
 	public void setLocation(Point3D p) {
-		location.setLocation(p.x, p.y, p.z);
+		center.setLocation(p.x, p.y, p.z);
 	}
 
 	/**
@@ -186,12 +186,12 @@ public class PoolBall {
 	@Override
 	public String toString() {
 		return "PoolBall: " + (ballNum == 0 ? "Cue" : ballNum) +
-				"; " + location;
+				"; " + center;
 	}
 
 	@Override
 	public Object clone() {
-		return new PoolBall(location.x, location.y, location.z,
+		return new PoolBall(center.x, center.y, center.z,
 				hue, type, ballNum);
 	}
 

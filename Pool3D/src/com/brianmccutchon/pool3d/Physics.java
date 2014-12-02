@@ -85,7 +85,7 @@ public class Physics {
 	 */
 	static double[][] findCollisionRotationMat(
 			PoolBall ball1, PoolBall ball2) {
-		Point3D ball2loc = ball2.location.subtract(ball1.location);
+		Point3D ball2loc = ball2.center.subtract(ball1.center);
 		normalize(ball2loc);
 
 		// Vector representing the axis of rotation
