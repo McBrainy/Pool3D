@@ -72,11 +72,12 @@ public class PhysTest {
 		ball1 = new PoolBall(5, 4, 3, null, null, 0);
 		ball2 = new PoolBall(6, 5, 2, null, null, 0);
 
-		checkRotationMat(ball1, ball2);
+		checkRotationMat(ball2, ball1);
 	}
 
 	private void checkRotationMat(PoolBall ball1, PoolBall ball2) {
-		double[][] rotationMat = Physics.findCollisionRotationMat(ball1, ball2);
+		double[][] rotationMat =
+				Physics.findCollisionRotationMat(ball1, ball2);
 
 		// Every rotation matrix should have a determinant of 1.0
 		assertEquals(1.0, determinant(rotationMat), Physics.EPSILON);
@@ -131,13 +132,13 @@ public class PhysTest {
 
 		Physics.handleCollision(ball2, ball1);
 
-		assertEquals( 1.33, ball2.velocity.x, 0.01);
-		assertEquals( 1.33, ball2.velocity.y, 0.01);
-		assertEquals( 2.67, ball2.velocity.z, 0.01);
+		assertEquals( 1.33, ball1.velocity.x, 0.01);
+		assertEquals( 1.33, ball1.velocity.y, 0.01);
+		assertEquals( 2.67, ball1.velocity.z, 0.01);
 
-		assertEquals( 0.67, ball1.velocity.x, 0.01);
-		assertEquals( 0.67, ball1.velocity.y, 0.01);
-		assertEquals(-0.67, ball1.velocity.z, 0.01);
+		assertEquals( 0.67, ball2.velocity.x, 0.01);
+		assertEquals( 0.67, ball2.velocity.y, 0.01);
+		assertEquals(-0.67, ball2.velocity.z, 0.01);
 	}
 
 }
