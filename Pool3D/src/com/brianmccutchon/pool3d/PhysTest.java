@@ -139,6 +139,32 @@ public class PhysTest {
 		assertEquals( 0.67, ball2.velocity.x, 0.01);
 		assertEquals( 0.67, ball2.velocity.y, 0.01);
 		assertEquals(-0.67, ball2.velocity.z, 0.01);
+
+		// Now the two balls are going in opposite directions
+		Physics.handleCollision(ball2, ball1);
+
+		assertEquals( 1.33, ball1.velocity.x, 0.01);
+		assertEquals( 1.33, ball1.velocity.y, 0.01);
+		assertEquals( 2.67, ball1.velocity.z, 0.01);
+
+		assertEquals( 0.67, ball2.velocity.x, 0.01);
+		assertEquals( 0.67, ball2.velocity.y, 0.01);
+		assertEquals(-0.67, ball2.velocity.z, 0.01);
+
+		// What if the balls are going in the same direction,
+		// but still getting farther apart?
+		ball2.velocity.setLocation(1.3, 1.3, 2.0);
+
+		Physics.handleCollision(ball1, ball2);
+
+		assertEquals( 1.33, ball1.velocity.x, 0.01);
+		assertEquals( 1.33, ball1.velocity.y, 0.01);
+		assertEquals( 2.67, ball1.velocity.z, 0.01);
+
+		// TODO Make this more precise by eliminating rounding error
+		assertEquals(1.3, ball2.velocity.x, Physics.EPSILON);
+		assertEquals(1.3, ball2.velocity.y, Physics.EPSILON);
+		assertEquals(2.0, ball2.velocity.z, Physics.EPSILON);
 	}
 
 }
