@@ -6,6 +6,15 @@ public class Physics {
 
 	public static final double EPSILON = Math.pow(10.0, -15);
 
+	/** A unit vector along the x axis. **/
+	private static final Point3D X_UNIT_VEC = new Point3D(1, 0, 0);
+
+	/** A unit vector along the y axis. **/
+	private static final Point3D Y_UNIT_VEC = new Point3D(0, 1, 0);
+
+	/** The origin of the coordinate system: (0, 0, 0) **/
+	private static final Point3D ORIGIN = new Point3D(0, 0, 0);
+
 	/**
 	 * Computes the new velocity vectors of two pool balls that have been
 	 * determined to be intersecting.
@@ -20,8 +29,7 @@ public class Physics {
 		// Check that the balls really are colliding; that is, if left to
 		// themselves and no other balls/walls/pockets interfere, they will be
 		// closer together in the next instant, by some definition of instant.
-		// TODO Add a unit test for this.
-		if (ball2.velocity.x - ball1.velocity.x < 0) {
+		if (ball1.velocity.x < ball2.velocity.x) {
 			return;
 		}
 
@@ -53,11 +61,22 @@ public class Physics {
 	}
 
 	/**
+	 * Normalizes a vector in place. This means that the vector will be
+	 * converted into a unit vector with the same direction as the original.
+	 * @param p The vector to nomalize.
+	 */
+	private static void normalize(Point3D p) {
+		double norm = p.dist(new Point3D(0, 0, 0));
+		p.x /= norm;
+		p.y /= norm;
+		p.z /= norm;
+	}
+
+	/**
 	 * Computes the rotation matrix that, if the balls are translated so that
 	 * ball1 is at (0, 0, 0) and the matrix is applied to the locations of the
-	 * two balls, ball2's x and y coordinates will equal 0.
-	 * Also, ball2's x coordinate should then be greater than ball1's x
-	 * coordinate.
+	 * two balls, ball2's x and y coordinates will equal 0. Also, ball2's x
+	 * coordinate should then be greater than ball1's x coordinate.
 	 * 
 	 * @param ball1 A pool ball.
 	 * @param ball2 Another pool ball.
@@ -66,28 +85,28 @@ public class Physics {
 	static double[][] findCollisionRotationMat(
 			PoolBall ball1, PoolBall ball2) {
 		Point3D ball2loc = ball2.location.subtract(ball1.location);
-		//double distance = ball1.location.dist(ball2.location);
-		double distanceY = Math.hypot(ball2loc.x, ball2loc.y);
-		double distanceZ = Math.hypot(ball2loc.x, ball2loc.z);
+		normalize(ball2loc);
 
-		// TODO Get rid of check for zero, if possible
-		double sinZ = almostEq(0.0, distanceY) ? 0.0 : -ball2loc.y / distanceY;
-		double sinY = almostEq(0.0, distanceZ) ? 0.0 : -ball2loc.z / distanceZ;
-		double cosZ = almostEq(0.0, distanceY) ? 1.0 :  ball2loc.x / distanceY;
-		double cosY = almostEq(0.0, distanceZ) ? 1.0 :  ball2loc.x / distanceZ;
+		// Vector representing the axis of rotation
+		Point3D a = ball2loc.cross(X_UNIT_VEC);
 
-		// TODO Make sure this works for rotations around the y axis
+		// The magnitude is the sin of the rotation angle
+		double sin = a.dist(ORIGIN);
+
+		// The dot product gives the cos of rotation
+		double cos = ball2loc.dot(X_UNIT_VEC);
+
+		if (almostEq(a.dist(ORIGIN), 0)) {
+			a = Y_UNIT_VEC;
+		} else {
+			normalize(a);
+		}
+
 		return new double[][] {
-				{  cosY*cosZ, -sinZ*cosY, sinY },
-				{       sinZ,       cosZ,    0 },
-				{ -sinY*cosZ,  sinY*sinZ, cosY }
-			};
-
-//		return new double[][] {
-//				{ cosY*cosZ, -sinZ, sinY*cosZ },
-//				{ sinZ*cosY,  cosZ, sinY*sinZ },
-//				{     -sinY,     0,      cosY }
-//			};
+			{ cos+a.x*a.x*(1-cos), a.x*a.y*(1-cos)-a.z*sin, a.x*a.z*(1-cos)+a.y*sin },
+			{ a.y*a.x*(1-cos)+a.z*sin, cos+a.y*a.y*(1-cos), a.y*a.z*(1-cos)-a.x*sin },
+			{ a.z*a.x*(1-cos)-a.y*sin, a.z*a.y*(1-cos)+a.x*sin, cos+a.z*a.z*(1-cos) }
+		};
 	}
 
 	/**

@@ -112,11 +112,12 @@ public class PhysTest {
 		assertEquals(new Point3D(-1, 0, 0), ball1.velocity);
 		assertEquals(new Point3D( 1, 0, 0), ball2.velocity);
 
-		// Going the other way
+		// Now they're headed in opposite directions; a collision check
+		// shouldn't do anything
 		Physics.handleCollision(ball1, ball2);
 
-		assertEquals(new Point3D( 1, 0, 0), ball1.velocity);
-		assertEquals(new Point3D(-1, 0, 0), ball2.velocity);
+		assertEquals(new Point3D(-1, 0, 0), ball1.velocity);
+		assertEquals(new Point3D( 1, 0, 0), ball2.velocity);
 
 		// Now with a nonzero y in velocity
 		ball1.location.setLocation(2, 2, 2);
