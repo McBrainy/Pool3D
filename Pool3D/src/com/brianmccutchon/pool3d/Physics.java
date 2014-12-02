@@ -28,15 +28,16 @@ public class Physics {
 
 		// Check that the balls really are colliding; that is, if left to
 		// themselves and no other balls/walls/pockets interfere, they will be
-		// closer together in the next instant, by some definition of instant.
-		if (ball1.velocity.x < ball2.velocity.x) {
-			return;
+		// closer together in x seconds, as x approaches 0 from the positive
+		// side of 0. Mathematically, lim_(x->0+) f(x) = true, where f(x) is
+		// true iff the balls will be closer in x seconds.
+		if (ball1.velocity.x > ball2.velocity.x) {
+			// switch x values
+			double tmp = ball1.velocity.x;
+			ball1.velocity.x = ball2.velocity.x;
+			ball2.velocity.x = tmp;
 		}
 
-		// switch x values
-		double tmp = ball1.velocity.x;
-		ball1.velocity.x = ball2.velocity.x;
-		ball2.velocity.x = tmp;
 
 		// Reverse the rotation matrix
 		transposeSquareMat(rotMatrix);
