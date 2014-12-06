@@ -1,8 +1,12 @@
 package com.brianmccutchon.pool3d;
 
 import static org.junit.Assert.*;
+import geometry.Tools3D;
+import geometry.Triangle3D;
 
 import java.util.Iterator;
+
+import geometry.Point3D;
 
 import org.junit.Test;
 
@@ -10,8 +14,15 @@ public class BallWireFrameTest {
 
 	@Test
 	public void test() {
-		for (int i : range(1, 9))
-			assertEquals((int) Math.pow(4, i), new BallWireFrame(i).numPolys());
+		BallWireFrame bwf = new BallWireFrame(1);
+		for (Triangle3D tri : bwf.getTriangles()) {
+			assertEquals(-1, Math.signum(Tools3D.sigmaVal(tri.points[0],
+					tri.points[1], tri.points[2], new Point3D(0, 0, 0))), 0.0);
+		}
+
+		for (int i : range(1, 5))
+			assertEquals((int) (5 * Math.pow(4, i)),
+					new BallWireFrame(i).numPolys());
 	}
 
 	/**

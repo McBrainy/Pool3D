@@ -8,24 +8,59 @@ import geometry.Triangle3D;
 
 public class BallWireFrame extends EnvironmentObject {
 
-	private static Point3D[] tetraCoords = {
-		new Point3D( 1, 0, -1.0/Math.sqrt(2)).normalize(),
-		new Point3D(-1, 0, -1.0/Math.sqrt(2)).normalize(),
-		new Point3D(0,  1,  1.0/Math.sqrt(2)).normalize(),
-		new Point3D(0, -1,  1.0/Math.sqrt(2)).normalize()
+	private static final double PHI = (1 + Math.sqrt(5)) / 2;
+
+	/**
+	 * The coordinates of vertices of the polyhedron the algorithm starts with.
+	 */
+	private static Point3D[] polyCoords = {
+		new Point3D(   0,    1,  PHI).normalize(),
+		new Point3D(   0,   -1,  PHI).normalize(),
+		new Point3D(   0,    1, -PHI).normalize(),
+		new Point3D(   0,   -1, -PHI).normalize(),
+		new Point3D(   1,  PHI,    0).normalize(),
+		new Point3D(  -1,  PHI,    0).normalize(),
+		new Point3D(   1, -PHI,    0).normalize(),
+		new Point3D(  -1, -PHI,    0).normalize(),
+		new Point3D( PHI,    0,    1).normalize(),
+		new Point3D(-PHI,    0,    1).normalize(),
+		new Point3D( PHI,    0,   -1).normalize(),
+		new Point3D(-PHI,    0,   -1).normalize(),
 	};
 
-	private static int[][] tetraSides = {
-		{ 0, 1, 2 }, { 1, 3, 2 }, { 0, 2, 3 }, { 0, 3, 1 }
+	/**
+	 * The sides of the initial polyhedron as arrays of indices into polyCoords.
+	 */
+	private static int[][] polySides = {
+		{  0,  1,  8 },
+		{  0,  9,  1 },
+		{  0,  5,  9 },
+		{  0,  4,  5 },
+		{  0,  8,  4 },
+		{  3,  6,  7 },
+		{  3, 10,  6 },
+		{  3,  2, 10 },
+		{  3, 11,  2 },
+		{  3,  7, 11 },
+		{  1,  9,  7 },
+		{  1,  7,  6 },
+		{  1,  6,  8 },
+		{ 10,  8,  6 },
+		{ 10,  4,  8 },
+		{ 10,  2,  4 },
+		{  5,  4,  2 },
+		{  5,  2, 11 },
+		{  5, 11,  9 },
+		{  7,  9, 11 },
 	};
 
 	public BallWireFrame(int depth) {
 		depth--;
 
-		for (int[] side : tetraSides) {
+		for (int[] side : polySides) {
 			ArrayList<Triangle3D> dome = makeDome(depth,
-					new Triangle3D(tetraCoords[side[0]],
-							tetraCoords[side[1]], tetraCoords[side[2]]));
+					new Triangle3D(polyCoords[side[0]],
+							polyCoords[side[1]], polyCoords[side[2]]));
 
 			dome.forEach(triangles::add);
 		}

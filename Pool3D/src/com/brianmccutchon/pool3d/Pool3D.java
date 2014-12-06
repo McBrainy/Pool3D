@@ -21,7 +21,7 @@ public class Pool3D extends JPanel {
 
 	public Pool3D() {
 		env = new Environment();
-		BallWireFrame bwf = new BallWireFrame(8);
+		BallWireFrame bwf = new BallWireFrame(6);
 		env.addObject(bwf);
 
 		t = new Timer(20, (e) -> {
