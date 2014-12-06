@@ -70,4 +70,11 @@ public class BallWireFrame extends EnvironmentObject {
 		return p1.add(p2).divide(2).normalize();
 	}
 
+	/**
+	 * Returns the total number of polygons of which the wireframe is composed.
+	 */
+	public int numPolys() {
+		return triangles.size();
+	}
+
 }
