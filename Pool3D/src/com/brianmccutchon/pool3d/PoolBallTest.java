@@ -10,19 +10,20 @@ import geometry.Point3D;
 
 import org.junit.Test;
 
-public class BallWireFrameTest {
+public class PoolBallTest {
 
 	@Test
 	public void test() {
-		BallWireFrame bwf = new BallWireFrame(1);
-		for (Triangle3D tri : bwf.getTriangles()) {
+		PoolBall ball = new PoolBall(0, 0, 0, null, null, 0, 1);
+		for (Triangle3D tri : ball.getTriangles()) {
 			assertEquals(-1, Math.signum(Tools3D.sigmaVal(tri.points[0],
 					tri.points[1], tri.points[2], new Point3D(0, 0, 0))), 0.0);
 		}
 
 		for (int i : range(1, 5))
 			assertEquals((int) (5 * Math.pow(4, i)),
-					new BallWireFrame(i).getTriangles().size());
+					new PoolBall(0, 0, 0, null, null, 0, i)
+							.getTriangles().size());
 	}
 
 	/**

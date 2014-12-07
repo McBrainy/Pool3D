@@ -21,10 +21,10 @@ public class Pool3D extends JPanel {
 
 	public Pool3D() {
 		env = new Environment();
-		BallWireFrame bwf = new BallWireFrame(6);
-		env.addObject(bwf);
+		PoolBall ball = PoolBall.create(0);
+		env.addObject(ball);
 
-		t = new Timer(20, (e) -> {
+		t = new Timer(16, (e) -> {
 			if(keysDown.contains('d'))
 				env.rotateRight();
 			if(keysDown.contains('a'))
@@ -79,10 +79,7 @@ public class Pool3D extends JPanel {
 
 	@Override
 	public void paint(Graphics g) {
-		Graphics2D g2 = (Graphics2D) g;
-		//g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
-		//		RenderingHints.VALUE_ANTIALIAS_ON);
-		env.render(g2);
+		env.render((Graphics2D) g);
 	}
 
 }
