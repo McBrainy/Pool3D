@@ -22,7 +22,7 @@ public class BallWireFrameTest {
 
 		for (int i : range(1, 5))
 			assertEquals((int) (5 * Math.pow(4, i)),
-					new BallWireFrame(i).numPolys());
+					new BallWireFrame(i).getTriangles().size());
 	}
 
 	/**
