@@ -1,12 +1,11 @@
 package com.brianmccutchon.pool3d;
 
 import static org.junit.Assert.*;
+import geometry.Point3D;
 import geometry.Tools3D;
 import geometry.Triangle3D;
 
 import java.util.Iterator;
-
-import geometry.Point3D;
 
 import org.junit.Test;
 
@@ -24,6 +23,26 @@ public class PoolBallTest {
 			assertEquals((int) (5 * Math.pow(4, i)),
 					new PoolBall(0, 0, 0, null, null, 0, i)
 							.getTriangles().size());
+	}
+
+	@Test
+	public void testRack() {
+		PoolBall[] balls = PoolBall.rack();
+
+		assertEquals(16, balls.length);
+
+		int counter = 0;
+		for (PoolBall b : balls) {
+			assertNotNull(b);
+
+			assertEquals(counter++, b.ballNum);
+		}
+
+		assertEquals(new Point3D(0, 0, 0), balls[8].center);
+		
+		for (int i : range(0, balls.length-1))
+			for (int j : range(i+1, balls.length-1))
+				assertFalse(balls[i].intersects(balls[j]));
 	}
 
 	/**

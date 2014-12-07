@@ -53,7 +53,8 @@ public class PoolBall extends EnvironmentObject {
 			new Point3D(-1.633,    -1.0,  0.5774),
 			new Point3D(-1.633,     1.0,  0.5774),
 			new Point3D(-1.633,     0.0,  -3.465),
-			new Point3D(-3.267,     0.0,     0.0));
+			new Point3D(-3.267,     0.0,     0.0),
+			new Point3D( 3.267,     0.0,     0.0));
 
 	/**
 	 * The coordinates of vertices of the polyhedron that the wireframe
@@ -112,7 +113,7 @@ public class PoolBall extends EnvironmentObject {
 	};
 
 	/** The smoothness of a pool ball. **/
-	private static final int SMOOTHNESS = 6;
+	private static final int SMOOTHNESS = 5;
 
 	/**
 	 * Constructs a new PoolBall, requiring the caller to supply data about it.
@@ -226,15 +227,18 @@ public class PoolBall extends EnvironmentObject {
 	public static PoolBall[] rack() {
 		Collections.shuffle(rackLocations);
 
-		PoolBall[] retVal = new PoolBall[15];
+		PoolBall[] retVal = new PoolBall[16];
 
-		int counter = 0;
-		for (int i = 1; i < 15; i++) {
+		int counter = 0; // current index into rackLocations
+		for (int i = 0; i < retVal.length; i++) {
 			retVal[i] = PoolBall.create(i);
-			if (counter != 7 && counter != 1) { // The two balls w/ set posns
+			if (i != 8 && i != 0) { // The two balls w/ set posns
 				retVal[i].center = rackLocations.get(counter++);
 			}
 		}
+		
+		retVal[0].center = new Point3D(10, 0, 0);
+		retVal[8].center = new Point3D(0, 0, 0);
 
 		return retVal;
 	}
