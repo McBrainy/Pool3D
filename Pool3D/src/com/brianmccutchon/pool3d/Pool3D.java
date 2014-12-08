@@ -3,6 +3,7 @@ package com.brianmccutchon.pool3d;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.util.Arrays;
 import java.util.HashSet;
 
 import javax.swing.*;
@@ -16,15 +17,19 @@ public class Pool3D extends JPanel {
 	static HashSet<Character> keysDown = new HashSet<>();
 	
 	Timer t;
-	private int frames = 0;
-	private long startTime;
+	private long lastTime;
 
 	public Pool3D() {
 		env = new Environment();
-		PoolBall ball = PoolBall.create(0);
-		env.addObject(ball);
+		//PoolBall ball = new PoolBall(0, 0, 0, null, null, 0, 5);
+		//env.addObject(ball);
+		Arrays.asList(Physics.balls).forEach(env::addObject);
+		Physics.balls[0].velocity.x = -0.4;
 
 		t = new Timer(16, (e) -> {
+			long time = System.currentTimeMillis();
+			Physics.nextFrame(time - lastTime);
+
 			if(keysDown.contains('d'))
 				env.rotateRight();
 			if(keysDown.contains('a'))
@@ -42,19 +47,16 @@ public class Pool3D extends JPanel {
 			if(keysDown.contains(']'))
 				env.nearCloser();
 			repaint();
-
-			frames++;
-			System.out.println(frames * 1000.0 / (System.currentTimeMillis() - startTime));
 		});
 
-		startTime = System.currentTimeMillis();
+		lastTime = System.currentTimeMillis();
 
 		t.start();
 	}
 
 	public static void main(String[] args) {
 		Pool3D pool = new Pool3D();
-		for (int i = 0; i < 2; i++) {
+		for (int i = 0; i < 10; i++) {
 			pool.env.moveBackward();
 		}
 

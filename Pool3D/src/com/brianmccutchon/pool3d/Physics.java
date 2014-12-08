@@ -14,6 +14,13 @@ public class Physics {
 
 	/** The origin of the coordinate system: (0, 0, 0) **/
 	private static final Point3D ORIGIN = new Point3D(0, 0, 0);
+	
+	public static PoolBall[] balls = PoolBall.rack();
+
+	// Table is 1x1x2 meters with 60mm diameter balls; 30mm is 1 unit
+	public static final int TABLE_X_DIM = 40;
+	public static final int TABLE_Y_DIM = 20;
+	public static final int TABLE_Z_DIM = 20;
 
 	/**
 	 * Computes the new velocity vectors of two pool balls that have been
@@ -133,6 +140,36 @@ public class Physics {
 	 */
 	private static boolean almostEq(double d1, double d2) {
 		return Math.abs(d1 - d2) < EPSILON;
+	}
+
+	public static void nextFrame(long time) {
+		for (PoolBall b : balls) {
+			// TODO Normalize velocity
+			b.center = b.center.add(b.velocity);
+		}
+
+		for (int i = 0; i < balls.length; i++) {
+			for (int j = i+1; j < balls.length; j++) {
+				if (balls[i].intersects(balls[j])) {
+					handleCollision(balls[i], balls[j]);
+				}
+			}
+		}
+
+		for (PoolBall b : balls) {
+			if (Math.abs(b.center.x) > TABLE_X_DIM/2 &&
+					Math.signum(b.center.x) == Math.signum(b.velocity.x)) {
+				b.velocity.x = -b.velocity.x;
+			}
+			if (Math.abs(b.center.y) > TABLE_Y_DIM/2 &&
+					Math.signum(b.center.y) == Math.signum(b.velocity.y)) {
+				b.velocity.y = -b.velocity.y;
+			}
+			if (Math.abs(b.center.z) > TABLE_Z_DIM/2 &&
+					Math.signum(b.center.z) == Math.signum(b.velocity.z)) {
+				b.velocity.z = -b.velocity.z;
+			}
+		}
 	}
 
 }
