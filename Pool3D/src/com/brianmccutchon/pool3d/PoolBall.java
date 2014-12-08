@@ -41,20 +41,20 @@ public class PoolBall extends EnvironmentObject {
 			PURPLE = new Color(128,   0, 128);
 
 	private static List<Point3D> rackLocations = Arrays.asList(
-			new Point3D( 1.633,    -1.0, -0.5774),
-			new Point3D( 1.633,     1.0, -0.5774),
-			new Point3D( 1.633,     0.0,   3.465),
-			new Point3D(  -2.0,     0.0,     0.0),
-			new Point3D(   2.0,     0.0,     0.0),
-			new Point3D(   1.0,  1.7321,     0.0),
-			new Point3D(  -1.0,  1.7321,     0.0),
-			new Point3D(   1.0, -1.7321,     0.0),
-			new Point3D(  -1.0, -1.7321,     0.0),
-			new Point3D(-1.633,    -1.0,  0.5774),
-			new Point3D(-1.633,     1.0,  0.5774),
-			new Point3D(-1.633,     0.0,  -3.465),
-			new Point3D(-3.267,     0.0,     0.0),
-			new Point3D( 3.267,     0.0,     0.0));
+			new Point3D(   1.633,    -1.0, -0.5774),
+			new Point3D(   1.633,     1.0, -0.5774),
+			new Point3D(   1.633,     0.0,  1.1547),
+			new Point3D(     0.0,    -2.0,     0.0),
+			new Point3D(     0.0,     2.0,     0.0),
+			new Point3D(     0.0,     1.0,  1.7321),
+			new Point3D(     0.0,    -1.0,  1.7321),
+			new Point3D(     0.0,     1.0, -1.7321),
+			new Point3D(     0.0,    -1.0, -1.7321),
+			new Point3D(  -1.633,    -1.0,  0.5774),
+			new Point3D(  -1.633,     1.0,  0.5774),
+			new Point3D(  -1.633,     0.0, -1.1547),
+			new Point3D(  -3.267,     0.0,     0.0),
+			new Point3D(   3.267,     0.0,     0.0));
 
 	/**
 	 * The coordinates of vertices of the polyhedron that the wireframe
@@ -93,27 +93,27 @@ public class PoolBall extends EnvironmentObject {
 		{  5,  4,  2 }, {  5,  2, 11 }, {  5, 11,  9 }, {  7,  9, 11 },
 	};
 
-	private static final PoolBall[] balls = {
-		new PoolBall(   0.0,     0.0,     0.0,  WHITE,    CUE,  0, 1),
-		new PoolBall( 3.267,     0.0,     0.0, YELLOW,  SOLID,  1, 1),
-		new PoolBall( 1.633,    -1.0, -0.5774,   BLUE,  SOLID,  2, 1),
-		new PoolBall( 1.633,     1.0, -0.5774,    RED,  SOLID,  3, 1),
-		new PoolBall( 1.633,     0.0,   3.465, PURPLE,  SOLID,  4, 1),
-		new PoolBall(  -2.0,     0.0,     0.0, ORANGE,  SOLID,  5, 1),
-		new PoolBall(   2.0,     0.0,     0.0,  GREEN,  SOLID,  6, 1),
-		new PoolBall(   1.0,  1.7321,     0.0,  BROWN,  SOLID,  7, 1),
-		new PoolBall(   0.0,     0.0,     0.0,  BLACK,  EIGHT,  8, 1),
-		new PoolBall(  -1.0,  1.7321,     0.0, YELLOW, STRIPE,  9, 1),
-		new PoolBall(   1.0, -1.7321,     0.0,   BLUE, STRIPE, 10, 1),
-		new PoolBall(  -1.0, -1.7321,     0.0,    RED, STRIPE, 11, 1),
-		new PoolBall(-1.633,    -1.0,  0.5774, PURPLE, STRIPE, 12, 1),
-		new PoolBall(-1.633,     1.0,  0.5774, ORANGE, STRIPE, 13, 1),
-		new PoolBall(-1.633,     0.0,  -3.465,  GREEN, STRIPE, 14, 1),
-		new PoolBall(-3.267,     0.0,     0.0,  BROWN, STRIPE, 15, 1),
+	static final PoolBall[] balls = {
+		new PoolBall(0, 0, 0,  WHITE,    CUE,  0, 4),
+		new PoolBall(0, 0, 0, YELLOW,  SOLID,  1, 4),
+		new PoolBall(0, 0, 0,   BLUE,  SOLID,  2, 4),
+		new PoolBall(0, 0, 0,    RED,  SOLID,  3, 4),
+		new PoolBall(0, 0, 0, PURPLE,  SOLID,  4, 4),
+		new PoolBall(0, 0, 0, ORANGE,  SOLID,  5, 4),
+		new PoolBall(0, 0, 0,  GREEN,  SOLID,  6, 4),
+		new PoolBall(0, 0, 0,  BROWN,  SOLID,  7, 4),
+		new PoolBall(0, 0, 0,  BLACK,  EIGHT,  8, 4),
+		new PoolBall(0, 0, 0, YELLOW, STRIPE,  9, 4),
+		new PoolBall(0, 0, 0,   BLUE, STRIPE, 10, 4),
+		new PoolBall(0, 0, 0,    RED, STRIPE, 11, 4),
+		new PoolBall(0, 0, 0, PURPLE, STRIPE, 12, 4),
+		new PoolBall(0, 0, 0, ORANGE, STRIPE, 13, 4),
+		new PoolBall(0, 0, 0,  GREEN, STRIPE, 14, 4),
+		new PoolBall(0, 0, 0,  BROWN, STRIPE, 15, 4),
 	};
 
 	/** The smoothness of a pool ball. **/
-	private static final int SMOOTHNESS = 5;
+	private static final int SMOOTHNESS = 4;
 
 	/**
 	 * Constructs a new PoolBall, requiring the caller to supply data about it.
@@ -236,7 +236,7 @@ public class PoolBall extends EnvironmentObject {
 				retVal[i].center = rackLocations.get(counter++);
 			}
 		}
-		
+
 		retVal[0].center = new Point3D(10, 0, 0);
 		retVal[8].center = new Point3D(0, 0, 0);
 
