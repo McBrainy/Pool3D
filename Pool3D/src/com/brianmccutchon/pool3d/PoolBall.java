@@ -202,21 +202,54 @@ public class PoolBall extends EnvironmentObject {
 		return p1.add(p2).divide(2).normalize();
 	}
 
+	double[][] transformMat = {
+			{ 1, 0, 0, center.x },
+			{ 0, 1, 0, center.y },
+			{ 0, 0, 1, center.z },
+			{ 0, 0, 0,    1     },			
+	};
+
 	@Override
 	public DSArrayList<Triangle3D> getTriangles() {
+		transformMat[0][3] = center.x;
+		transformMat[1][3] = center.y;
+		transformMat[2][3] = center.z;
+
 		DSArrayList<Triangle3D> retVal = new DSArrayList<>();
 		triangles.stream().parallel()
 			.map(t -> {
-				if (Math.abs((t.points[0].x+t.points[1].x+t.points[2].x)/3)
-						< (type == BallType.STRIPE ? 0.5 : 0.8)) {
-					t.triColor = hue;
+				Triangle3D transformed = new Triangle3D(
+						transform(t.points[0]),
+						transform(t.points[1]),
+						transform(t.points[2]));
+
+				// Conditionally color the triangle
+				if (type != BallType.CUE &&
+						Math.abs((t.points[0].x+t.points[1].x+t.points[2].x)/3) <
+						(type == BallType.STRIPE ? 0.5 : 0.8)) {
+					transformed.triColor = hue;
 				}
-				t = t.add(center);
-				return t;
+
+				return transformed;
 			})
 			.forEachOrdered(retVal::add);;
 
 		return retVal;
+	}
+
+	/**
+	 * Transforms a Point3D using {@link #transformMat}.
+	 * @param p The point to transform
+	 * @return The transformed point
+	 */
+	private Point3D transform(Point3D p) {
+		return new Point3D(
+				p.x*transformMat[0][0] + p.y*transformMat[0][1] +
+					p.z*transformMat[0][2] + transformMat[0][3],
+				p.x*transformMat[1][0] + p.y*transformMat[1][1] +
+					p.z*transformMat[1][2] + transformMat[1][3],
+				p.x*transformMat[2][0] + p.y*transformMat[2][1] +
+					p.z*transformMat[2][2] + transformMat[2][3]);
 	}
 
 	/**
