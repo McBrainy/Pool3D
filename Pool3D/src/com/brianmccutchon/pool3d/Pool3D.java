@@ -9,6 +9,7 @@ import java.util.HashSet;
 import javax.swing.*;
 
 import geometry.Environment;
+import geometry.Point3D;
 
 public class Pool3D extends JPanel {
 
@@ -25,6 +26,8 @@ public class Pool3D extends JPanel {
 		//env.addObject(ball);
 		Arrays.asList(Physics.balls).forEach(env::addObject);
 		Physics.balls[0].velocity.x = -0.4;
+		env.ambientLight = 0.5;
+		env.tempLightSource = new Point3D(500, -1000, 200);
 
 		t = new Timer(16, (e) -> {
 			long time = System.currentTimeMillis();
@@ -56,7 +59,7 @@ public class Pool3D extends JPanel {
 
 	public static void main(String[] args) {
 		Pool3D pool = new Pool3D();
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < 20; i++) {
 			pool.env.moveBackward();
 		}
 
