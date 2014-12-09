@@ -1,5 +1,6 @@
 package com.brianmccutchon.pool3d;
 
+import geometry.DSArrayList;
 import geometry.EnvironmentObject;
 import geometry.Point3D;
 import geometry.Triangle3D;
@@ -113,7 +114,7 @@ public class PoolBall extends EnvironmentObject {
 	};
 
 	/** The smoothness of a pool ball. **/
-	private static final int SMOOTHNESS = 4;
+	private static final int SMOOTHNESS = 5;
 
 	/**
 	 * Constructs a new PoolBall, requiring the caller to supply data about it.
@@ -199,6 +200,23 @@ public class PoolBall extends EnvironmentObject {
 	/** Computes the normalized average of two points. **/
 	private static Point3D normAvg(Point3D p1, Point3D p2) {
 		return p1.add(p2).divide(2).normalize();
+	}
+
+	@Override
+	public DSArrayList<Triangle3D> getTriangles() {
+		DSArrayList<Triangle3D> retVal = new DSArrayList<>();
+		triangles.stream().parallel()
+			.map(t -> {
+				if (Math.abs((t.points[0].x+t.points[1].x+t.points[2].x)/3)
+						< (type == BallType.STRIPE ? 0.5 : 0.8)) {
+					t.triColor = hue;
+				}
+				t = t.add(center);
+				return t;
+			})
+			.forEachOrdered(retVal::add);;
+
+		return retVal;
 	}
 
 	/**
