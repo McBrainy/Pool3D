@@ -31,9 +31,6 @@ public class PoolBall extends EnvironmentObject {
 	/** The number of this ball. 0 if it is the cue ball. **/
 	public final int ballNum;
 
-	/** The smoothness of this PoolBall's wireframe. **/
-	private int smoothness;
-
 	/** The golden ratio. **/
 	private static final double PHI = (1 + Math.sqrt(5)) / 2;
 
@@ -94,27 +91,47 @@ public class PoolBall extends EnvironmentObject {
 		{  5,  4,  2 }, {  5,  2, 11 }, {  5, 11,  9 }, {  7,  9, 11 },
 	};
 
-	static final PoolBall[] balls = {
-		new PoolBall(0, 0, 0,  WHITE,    CUE,  0, 4),
-		new PoolBall(0, 0, 0, YELLOW,  SOLID,  1, 4),
-		new PoolBall(0, 0, 0,   BLUE,  SOLID,  2, 4),
-		new PoolBall(0, 0, 0,    RED,  SOLID,  3, 4),
-		new PoolBall(0, 0, 0, PURPLE,  SOLID,  4, 4),
-		new PoolBall(0, 0, 0, ORANGE,  SOLID,  5, 4),
-		new PoolBall(0, 0, 0,  GREEN,  SOLID,  6, 4),
-		new PoolBall(0, 0, 0,  BROWN,  SOLID,  7, 4),
-		new PoolBall(0, 0, 0,  BLACK,  EIGHT,  8, 4),
-		new PoolBall(0, 0, 0, YELLOW, STRIPE,  9, 4),
-		new PoolBall(0, 0, 0,   BLUE, STRIPE, 10, 4),
-		new PoolBall(0, 0, 0,    RED, STRIPE, 11, 4),
-		new PoolBall(0, 0, 0, PURPLE, STRIPE, 12, 4),
-		new PoolBall(0, 0, 0, ORANGE, STRIPE, 13, 4),
-		new PoolBall(0, 0, 0,  GREEN, STRIPE, 14, 4),
-		new PoolBall(0, 0, 0,  BROWN, STRIPE, 15, 4),
+	private static final PoolBall[] balls = {
+		new PoolBall(0, 0, 0,  WHITE,    CUE,  0),
+		new PoolBall(0, 0, 0, YELLOW,  SOLID,  1),
+		new PoolBall(0, 0, 0,   BLUE,  SOLID,  2),
+		new PoolBall(0, 0, 0,    RED,  SOLID,  3),
+		new PoolBall(0, 0, 0, PURPLE,  SOLID,  4),
+		new PoolBall(0, 0, 0, ORANGE,  SOLID,  5),
+		new PoolBall(0, 0, 0,  GREEN,  SOLID,  6),
+		new PoolBall(0, 0, 0,  BROWN,  SOLID,  7),
+		new PoolBall(0, 0, 0,  BLACK,  EIGHT,  8),
+		new PoolBall(0, 0, 0, YELLOW, STRIPE,  9),
+		new PoolBall(0, 0, 0,   BLUE, STRIPE, 10),
+		new PoolBall(0, 0, 0,    RED, STRIPE, 11),
+		new PoolBall(0, 0, 0, PURPLE, STRIPE, 12),
+		new PoolBall(0, 0, 0, ORANGE, STRIPE, 13),
+		new PoolBall(0, 0, 0,  GREEN, STRIPE, 14),
+		new PoolBall(0, 0, 0,  BROWN, STRIPE, 15),
 	};
 
-	/** The smoothness of a pool ball. **/
+	/**
+	 * The smoothness of the wireframe. The resulting sphere
+	 * will be composed of {@code 5*4^n} polygons, where n is the desired
+	 * smoothness provided. This should be a small number, such as 6 or 7.
+	 */
 	private static final int SMOOTHNESS = 5;
+
+	/**
+	 * The global sphere wireframe. This is referenced in each of the balls'
+	 * {@link EnvironmentObject#triangles triangles} lists.
+	 */
+	private static final DSArrayList<Triangle3D> WIREFRAME = new DSArrayList<>();
+
+	static {
+		for (int[] side : polySides) {
+			ArrayList<Triangle3D> dome = makeDome(SMOOTHNESS - 1,
+					new Triangle3D(polyCoords[side[0]],
+							polyCoords[side[1]], polyCoords[side[2]]));
+
+			dome.forEach(WIREFRAME::add);
+		}
+	}
 
 	/**
 	 * Constructs a new PoolBall, requiring the caller to supply data about it.
@@ -132,23 +149,13 @@ public class PoolBall extends EnvironmentObject {
 	 * smoothness provided. This should be a small number, such as 6 or 7.
 	 */
 	public PoolBall(double x, double y, double z,
-			Color hue, BallType type, int ballNum, int smoothness) {
-		center = new Point3D(x, y, z);
-		this.hue = hue;
-		this.type = type;
-		this.ballNum = ballNum;
-		this.smoothness = smoothness;
-		velocity = new Point3D(0, 0, 0);
-
-		smoothness--;
-
-		for (int[] side : polySides) {
-			ArrayList<Triangle3D> dome = makeDome(smoothness,
-					new Triangle3D(polyCoords[side[0]],
-							polyCoords[side[1]], polyCoords[side[2]]));
-
-			dome.forEach(triangles::add);
-		}
+			Color hue, BallType type, int ballNum) {
+		this.center    = new Point3D(x, y, z);
+		this.hue       = hue;
+		this.type      = type;
+		this.ballNum   = ballNum;
+		this.velocity  = new Point3D(0, 0, 0);
+		this.triangles = WIREFRAME;
 	}
 
 	/**
@@ -261,7 +268,7 @@ public class PoolBall extends EnvironmentObject {
 	public static PoolBall create(int ballNum) {
 		PoolBall ball = balls[ballNum];
 		return new PoolBall(ball.center.x, ball.center.y, ball.center.z,
-				ball.hue, ball.type, ballNum, PoolBall.SMOOTHNESS);
+				ball.hue, ball.type, ballNum);
 	}
 
 	/**
@@ -327,7 +334,7 @@ public class PoolBall extends EnvironmentObject {
 	@Override
 	public Object clone() {
 		return new PoolBall(center.x, center.y, center.z,
-				hue, type, ballNum, smoothness);
+				hue, type, ballNum);
 	}
 
 }

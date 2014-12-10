@@ -13,7 +13,7 @@ public class PoolBallTest {
 
 	@Test
 	public void test() {
-		PoolBall ball = new PoolBall(0, 0, 0, null, null, 0, 1);
+		PoolBall ball = new PoolBall(0, 0, 0, null, null, 0);
 		for (Triangle3D tri : ball.getTriangles()) {
 			assertEquals(-1, Math.signum(Tools3D.sigmaVal(tri.points[0],
 					tri.points[1], tri.points[2], new Point3D(0, 0, 0))), 0.0);
@@ -21,7 +21,7 @@ public class PoolBallTest {
 
 		for (int i : range(1, 5))
 			assertEquals((int) (5 * Math.pow(4, i)),
-					new PoolBall(0, 0, 0, null, null, 0, i)
+					new PoolBall(0, 0, 0, null, null, 0)
 							.getTriangles().size());
 	}
 
@@ -39,7 +39,7 @@ public class PoolBallTest {
 		}
 
 		assertEquals(new Point3D(0, 0, 0), balls[8].center);
-		
+
 		for (int i : range(0, balls.length-1))
 			for (int j : range(i+1, balls.length-1))
 				assertFalse(balls[i].intersects(balls[j]));
