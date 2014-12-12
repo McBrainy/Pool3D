@@ -49,9 +49,8 @@ public class PhysTest {
 
 	@Test
 	public void testRotationMat() {
-		PoolBall ball1 = new PoolBall(0, 0, 0, null, null, 0);
-		PoolBall ball2 = new PoolBall(
-				PoolBall.DIAMETER - Physics.EPSILON, 0, 0, null, null, 1);
+		Point3D ball1 = new Point3D(0, 0, 0);
+		Point3D ball2 = new Point3D(PoolBall.DIAMETER - Physics.EPSILON, 0, 0);
 
 		// No rotation required, should return the identity matrix
 		assertArrayEquals(identity,
@@ -73,8 +72,8 @@ public class PhysTest {
 	 * correctly for the two pool balls provided.
 	 */
 	private void checkRotationMat(Point3D p1, Point3D p2) {
-		PoolBall ball1 = new PoolBall(p1.x, p1.y, p1.z, null, null, 0);
-		PoolBall ball2 = new PoolBall(p2.x, p2.y, p2.z, null, null, 0);
+		Point3D ball1 = new Point3D(p1.x, p1.y, p1.z);
+		Point3D ball2 = new Point3D(p2.x, p2.y, p2.z);
 
 		double[][] rotationMat =
 				Physics.findCollisionRotationMat(ball1, ball2);
@@ -82,7 +81,7 @@ public class PhysTest {
 		// Every rotation matrix should have a determinant of 1.0
 		assertEquals(1.0, determinant(rotationMat), Physics.EPSILON);
 
-		Point3D p = ball2.center.subtract(ball1.center);
+		Point3D p = ball2.subtract(ball1);
 		Physics.rotateVec(p, rotationMat);
 
 		assertEquals(0.0, p.y, Physics.EPSILON);

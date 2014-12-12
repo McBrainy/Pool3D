@@ -7,27 +7,33 @@ public class Physics {
 	public static final double EPSILON = Math.pow(10.0, -15);
 
 	/** A unit vector along the x axis. **/
-	private static final Point3D X_UNIT_VEC = new Point3D(1, 0, 0);
+	static final Point3D X_UNIT_VEC = new Point3D(1, 0, 0);
 
 	/** A unit vector along the y axis. **/
-	private static final Point3D Y_UNIT_VEC = new Point3D(0, 1, 0);
+	static final Point3D Y_UNIT_VEC = new Point3D(0, 1, 0);
 
 	/** The origin of the coordinate system: (0, 0, 0) **/
-	private static final Point3D ORIGIN = new Point3D(0, 0, 0);
+	static final Point3D ORIGIN = new Point3D(0, 0, 0);
 	
 	public static PoolBall[] balls = PoolBall.rack();
 
 	// Table is 1x1x2 meters with 60mm diameter balls; 30mm is 1 unit
-	public static final int TABLE_X_DIM = 40;
-	public static final int TABLE_Y_DIM = 20;
-	public static final int TABLE_Z_DIM = 20;
+	public static final int TABLE_X = 40;
+	public static final int TABLE_Y = 20;
+	public static final int TABLE_Z = 20;
+
+	/** The amount by which a ball slows down each frame. **/
+	private static final double AIR_RESISTANCE = 0.003;
+
+	/** {@code true} iff at least one ball is moving. **/
+	public static boolean ballsAreMoving = false;
 
 	/**
 	 * Computes the new velocity vectors of two pool balls that have been
 	 * determined to be intersecting.
 	 */
 	public static void handleCollision(PoolBall ball1, PoolBall ball2) {
-		double[][] rotMatrix = findCollisionRotationMat(ball1, ball2);
+		double[][] rotMatrix = findCollisionRotationMat(ball1.center, ball2.center);
 
 		// Rotate so only x values matter
 		rotateVec(ball1.velocity, rotMatrix);
@@ -91,8 +97,8 @@ public class Physics {
 	 * @return The collision rotation matrix.
 	 */
 	static double[][] findCollisionRotationMat(
-			PoolBall ball1, PoolBall ball2) {
-		Point3D ball2loc = ball2.center.subtract(ball1.center);
+			Point3D ball1, Point3D ball2) {
+		Point3D ball2loc = ball2.subtract(ball1);
 		normalize(ball2loc);
 
 		// Vector representing the axis of rotation
@@ -138,14 +144,22 @@ public class Physics {
 	 * @return {@code true} if and only if d1 and d2 are within
 	 * {@link Physics#EPSILON} of each other.
 	 */
-	private static boolean almostEq(double d1, double d2) {
+	static boolean almostEq(double d1, double d2) {
 		return Math.abs(d1 - d2) < EPSILON;
 	}
 
 	public static void nextFrame(long time) {
+		ballsAreMoving = false;
+
 		for (PoolBall b : balls) {
 			// TODO Normalize velocity
-			b.center = b.center.add(b.velocity);
+			if (almostEq(b.velocity, ORIGIN, Math.pow(10, -3))) {
+				b.velocity.setLocation(0, 0, 0);
+			} else {
+				ballsAreMoving = true;
+				b.center = b.center.add(b.velocity);
+				doAirResistance(b.velocity);
+			}
 		}
 
 		for (int i = 0; i < balls.length; i++) {
@@ -157,19 +171,41 @@ public class Physics {
 		}
 
 		for (PoolBall b : balls) {
-			if (Math.abs(b.center.x) > TABLE_X_DIM/2 &&
+			if (Math.abs(b.center.x) + 1 > TABLE_X/2 &&
 					Math.signum(b.center.x) == Math.signum(b.velocity.x)) {
 				b.velocity.x = -b.velocity.x;
 			}
-			if (Math.abs(b.center.y) > TABLE_Y_DIM/2 &&
+			if (Math.abs(b.center.y) + 1 > TABLE_Y/2 &&
 					Math.signum(b.center.y) == Math.signum(b.velocity.y)) {
 				b.velocity.y = -b.velocity.y;
 			}
-			if (Math.abs(b.center.z) > TABLE_Z_DIM/2 &&
+			if (Math.abs(b.center.z) + 1 > TABLE_Z/2 &&
 					Math.signum(b.center.z) == Math.signum(b.velocity.z)) {
 				b.velocity.z = -b.velocity.z;
 			}
 		}
+	}
+
+	private static boolean almostEq(Point3D p1, Point3D p2) {
+		return almostEq(p1.x, p2.x) &&
+				almostEq(p1.y, p2.y) &&
+				almostEq(p1.z, p2.z);
+	}
+
+	private static boolean almostEq(Point3D p1, Point3D p2, double epsilon) {
+		return almostEq(p1.x, p2.x, epsilon) &&
+				almostEq(p1.y, p2.y, epsilon) &&
+				almostEq(p1.z, p2.z, epsilon);
+	}
+
+	private static boolean almostEq(double x, double n, double epsilon) {
+		return Math.abs(x - n) < epsilon;
+	}
+
+	private static void doAirResistance(Point3D p) {
+		p.x = Math.signum(p.x) * Math.max(0, Math.abs(p.x) - AIR_RESISTANCE);
+		p.y = Math.signum(p.y) * Math.max(0, Math.abs(p.y) - AIR_RESISTANCE);
+		p.z = Math.signum(p.z) * Math.max(0, Math.abs(p.z) - AIR_RESISTANCE);
 	}
 
 }

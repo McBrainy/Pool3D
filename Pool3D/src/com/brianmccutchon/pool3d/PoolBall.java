@@ -115,7 +115,7 @@ public class PoolBall extends EnvironmentObject {
 	 * will be composed of {@code 5*4^n} polygons, where n is the desired
 	 * smoothness provided. This should be a small number, such as 6 or 7.
 	 */
-	private static final int SMOOTHNESS = 5;
+	static final int SMOOTHNESS = 4;
 
 	/**
 	 * The global sphere wireframe. This is referenced in each of the balls'
