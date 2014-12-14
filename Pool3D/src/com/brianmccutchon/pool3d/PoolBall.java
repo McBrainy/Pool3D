@@ -34,10 +34,15 @@ public class PoolBall extends EnvironmentObject {
 	/** The golden ratio. **/
 	private static final double PHI = (1 + Math.sqrt(5)) / 2;
 
+	/** Just a couple of color constants. **/
 	private static final Color
 			BROWN  = new Color(139,  69,  19),
 			PURPLE = new Color(128,   0, 128);
 
+	/**
+	 * Possible locations of all balls except the cue and eight balls,
+	 * which have different placement rules.
+	 */
 	private static List<Point3D> rackLocations = Arrays.asList(
 			new Point3D(   1.633,    -1.0, -0.5774),
 			new Point3D(   1.633,     1.0, -0.5774),
@@ -91,6 +96,7 @@ public class PoolBall extends EnvironmentObject {
 		{  5,  4,  2 }, {  5,  2, 11 }, {  5, 11,  9 }, {  7,  9, 11 },
 	};
 
+	/** This array holds information from which balls can be constructed. **/
 	private static final PoolBall[] balls = {
 		new PoolBall(0, 0, 0,  WHITE,    CUE,  0),
 		new PoolBall(0, 0, 0, YELLOW,  SOLID,  1),
@@ -123,7 +129,11 @@ public class PoolBall extends EnvironmentObject {
 	 */
 	private static final DSArrayList<Triangle3D> WIREFRAME = new DSArrayList<>();
 
+	// Construct the wireframe
 	static {
+		// For each side of the polygon, recursively subdivide its faces into
+		// equilateral triangles. This results in a sphere wireframe with
+		// nearly equilateral triangles of similar size.
 		for (int[] side : polySides) {
 			ArrayList<Triangle3D> dome = makeDome(SMOOTHNESS - 1,
 					new Triangle3D(polyCoords[side[0]],
@@ -172,7 +182,9 @@ public class PoolBall extends EnvironmentObject {
 
 	/**
 	 * Splits the given triangle into smaller equilateral triangles, which are
-	 * then normalized to the unit circle.
+	 * normalized to the unit circle. This is not really a "dome," I just
+	 * couldn't think of a better name for it.
+	 * 
 	 * @param depth The depth to which to recurse.
 	 * @param tri The triangle to subdivide.
 	 * @return An ArrayList containing {@code Math.pow(4, depth)} triangles.
@@ -180,7 +192,7 @@ public class PoolBall extends EnvironmentObject {
 	private static ArrayList<Triangle3D> makeDome(int depth, Triangle3D tri) {
 		ArrayList<Triangle3D> triangles = new ArrayList<>();
 
-		if (depth == 0) {
+		if (depth == 0) { // Depth limit reached, stop recursing
 			triangles.add(tri);
 		} else {
 			depth--;
@@ -209,7 +221,13 @@ public class PoolBall extends EnvironmentObject {
 		return p1.add(p2).divide(2).normalize();
 	}
 
-	double[][] transformMat = {
+	/**
+	 * The transformation matrix applied in the getTriangles method.
+	 * A translation matrix is used because I may wish to add spinning later
+	 * and it would be fairly easy to combine this translation matrix with a
+	 * rotation matrix.
+	 */
+	private double[][] transformMat = {
 			{ 1, 0, 0, center.x },
 			{ 0, 1, 0, center.y },
 			{ 0, 0, 1, center.z },
@@ -218,19 +236,23 @@ public class PoolBall extends EnvironmentObject {
 
 	@Override
 	public DSArrayList<Triangle3D> getTriangles() {
+		// Update the transformation matrix
 		transformMat[0][3] = center.x;
 		transformMat[1][3] = center.y;
 		transformMat[2][3] = center.z;
 
+		// Compute the return value in parallel
 		DSArrayList<Triangle3D> retVal = new DSArrayList<>();
 		triangles.stream().parallel()
 			.map(t -> {
+				// Apply transformMat to each coord of the triangle
 				Triangle3D transformed = new Triangle3D(
 						transform(t.points[0]),
 						transform(t.points[1]),
 						transform(t.points[2]));
 
-				// Conditionally color the triangle
+				// Color the triangle if it is within a certain range.
+				// The range depends on what type of ball this is
 				if (type != BallType.CUE &&
 						Math.abs((t.points[0].x+t.points[1].x+t.points[2].x)/3) <
 						(type == BallType.STRIPE ? 0.5 : 0.8)) {

@@ -2,8 +2,19 @@ package com.brianmccutchon.pool3d;
 
 import geometry.Point3D;
 
+/**
+ * This is a purely static class containing information related to the physics
+ * of 3D pool. However, it also holds information about the table and the pool
+ * balls.
+ * 
+ * @author Brian McCutchon
+ */
 public class Physics {
 
+	/**
+	 * The default leeway allowed in comparison using
+	 * {@link #almostEq(double, double)} and related methods.
+	 */
 	public static final double EPSILON = Math.pow(10.0, -15);
 
 	/** A unit vector along the x axis. **/
@@ -12,18 +23,34 @@ public class Physics {
 	/** A unit vector along the y axis. **/
 	static final Point3D Y_UNIT_VEC = new Point3D(0, 1, 0);
 
+	/** A unit vector along the y axis. **/
+	static final Point3D Z_UNIT_VEC = new Point3D(0, 0, 1);
+
 	/** The origin of the coordinate system: (0, 0, 0) **/
 	static final Point3D ORIGIN = new Point3D(0, 0, 0);
-	
+
+	// TODO Get rid of global variables like this one.
+	// Maybe make Physics instantiable? or create a new class.
+	/**
+	 * The pool balls, in order of their ball numbers.
+	 * balls[0] is the cue ball,
+	 * balls[1] is the 1 ball,
+	 * balls[2] is the 2 ball,
+	 * ...
+	 */
 	public static PoolBall[] balls = PoolBall.rack();
 
-	// Table is 1x1x2 meters with 60mm diameter balls; 30mm is 1 unit
-	public static final int TABLE_X = 40;
-	public static final int TABLE_Y = 20;
-	public static final int TABLE_Z = 20;
+	/** The dimensions of the pool "table." **/
+	public static final int TABLE_X = 40, TABLE_Y = 20, TABLE_Z = 20;
 
 	/** The amount by which a ball slows down each frame. **/
 	private static final double AIR_RESISTANCE = 0.003;
+
+	/**
+	 * How close each component of a ball's velocity must be to 0 for it to be
+	 * considered stationary.
+	 */
+	private static final double MOVEMENT_EPSILON = 0.001;
 
 	/** {@code true} iff at least one ball is moving. **/
 	public static boolean ballsAreMoving = false;
@@ -50,7 +77,6 @@ public class Physics {
 			ball1.velocity.x = ball2.velocity.x;
 			ball2.velocity.x = tmp;
 		}
-
 
 		// Reverse the rotation matrix
 		transposeSquareMat(rotMatrix);
@@ -104,11 +130,13 @@ public class Physics {
 		// Vector representing the axis of rotation
 		Point3D a = ball2loc.cross(X_UNIT_VEC);
 
-		// The magnitude is the sin of the rotation angle
-		double sin = a.dist(ORIGIN);
+		// Since ball2Loc and X_UNIT_VEC are unit vectors, the following hold:
 
-		// The dot product gives the cos of rotation
+		// Their dot product is the cos of the angle between them
 		double cos = ball2loc.dot(X_UNIT_VEC);
+
+		// The magnitude of their cross product is the sin of the rotation angle
+		double sin = a.dist(ORIGIN);
 
 		// The matrix below only works if the axis is a unit vector
 		if (almostEq(a.dist(ORIGIN), 0)) {
@@ -117,6 +145,8 @@ public class Physics {
 			normalize(a);
 		}
 
+		// Rotation matrix given an axis and an angle. Source:
+		//http://en.wikipedia.org/wiki/Rotation_matrix#Rotation_matrix_from_axis_and_angle
 		return new double[][] {
 			{cos+a.x*a.x*(1-cos), a.x*a.y*(1-cos)-a.z*sin, a.x*a.z*(1-cos)+a.y*sin},
 			{a.y*a.x*(1-cos)+a.z*sin, cos+a.y*a.y*(1-cos), a.y*a.z*(1-cos)-a.x*sin},
@@ -137,26 +167,17 @@ public class Physics {
 	}
 
 	/**
-	 * Returns true if the values provided are approximately equal.
-	 * 
-	 * @param d1 A value to compare.
-	 * @param d2 The other value to compare.
-	 * @return {@code true} if and only if d1 and d2 are within
-	 * {@link Physics#EPSILON} of each other.
+	 * Computes the state of the balls after the next frame.
 	 */
-	static boolean almostEq(double d1, double d2) {
-		return Math.abs(d1 - d2) < EPSILON;
-	}
-
-	public static void nextFrame(long time) {
+	public static void nextFrame() {
 		ballsAreMoving = false;
 
 		for (PoolBall b : balls) {
-			// TODO Normalize velocity
-			if (almostEq(b.velocity, ORIGIN, Math.pow(10, -3))) {
+			if (almostEq(b.velocity, ORIGIN, Physics.MOVEMENT_EPSILON)) {
+				// "Close enough" to (0, 0, 0).
 				b.velocity.setLocation(0, 0, 0);
 			} else {
-				ballsAreMoving = true;
+				ballsAreMoving = true; // We found a ball that is moving
 				b.center = b.center.add(b.velocity);
 				doAirResistance(b.velocity);
 			}
@@ -170,6 +191,7 @@ public class Physics {
 			}
 		}
 
+		// Check whether it is hitting a wall
 		for (PoolBall b : balls) {
 			if (Math.abs(b.center.x) + 1 > TABLE_X/2 &&
 					Math.signum(b.center.x) == Math.signum(b.velocity.x)) {
@@ -186,22 +208,61 @@ public class Physics {
 		}
 	}
 
+	/**
+	 * Returns true if the values provided are approximately equal.
+	 * That is, they are within {@link #EPSILON} of each other.
+	 * 
+	 * @param d1 A value to compare.
+	 * @param d2 The other value to compare.
+	 * @return {@code true} if and only if d1 and d2 are within
+	 * {@link Physics#EPSILON} of each other.
+	 */
+	static boolean almostEq(double d1, double d2) {
+		return Math.abs(d1 - d2) < EPSILON;
+	}
+
+	/**
+	 * Checks whether two points are almost equal in each of their three
+	 * components. That is, within {@link Physics#EPSILON}.
+	 * @param p1 A point to compare.
+	 * @param p2 A point to compare.
+	 * @return {@code true} iff they are almost equal.
+	 */
 	private static boolean almostEq(Point3D p1, Point3D p2) {
 		return almostEq(p1.x, p2.x) &&
 				almostEq(p1.y, p2.y) &&
 				almostEq(p1.z, p2.z);
 	}
 
+	/**
+	 * Checks whether two points are almost equal in each of their three
+	 * components.
+	 * @param p1 A point to compare.
+	 * @param p2 A point to compare.
+	 * @param epsilon The maximum allowed difference.
+	 * @return {@code true} iff they are almost equal.
+	 */
 	private static boolean almostEq(Point3D p1, Point3D p2, double epsilon) {
 		return almostEq(p1.x, p2.x, epsilon) &&
 				almostEq(p1.y, p2.y, epsilon) &&
 				almostEq(p1.z, p2.z, epsilon);
 	}
 
+	/**
+	 * Checks whether two numbers are almost equal to each other. That is,
+	 * within {@link Physics#EPSILON}.
+	 * @param x A number to compare.
+	 * @param n A number to compare.
+	 * @return {@code true} iff they are almost equal.
+	 */
 	private static boolean almostEq(double x, double n, double epsilon) {
 		return Math.abs(x - n) < epsilon;
 	}
 
+	/**
+	 * Computes linear "air resistance" on a ball's velocity.
+	 * @param p The ball's velocity.
+	 */
 	private static void doAirResistance(Point3D p) {
 		p.x = Math.signum(p.x) * Math.max(0, Math.abs(p.x) - AIR_RESISTANCE);
 		p.y = Math.signum(p.y) * Math.max(0, Math.abs(p.y) - AIR_RESISTANCE);

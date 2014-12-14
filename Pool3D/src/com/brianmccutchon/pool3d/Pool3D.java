@@ -18,25 +18,40 @@ import geometry.Point3D;
 import geometry.Triangle3D;
 import static com.brianmccutchon.pool3d.Physics.*;
 
+/**
+ * This class represents the main class and GUI of 3D pool.
+ * Currently, the game has two modes, shooting and not shooting, as
+ * represented by {@link #shooting}. Each has its own set of event handlers.
+ * 
+ * @author Brian McCutchon
+ */
 public class Pool3D extends JPanel {
 
 	private static final long serialVersionUID = 2316556066963532682L;
-	Environment env   = new Environment();
-	static HashSet<Integer> keysDown = new HashSet<>();
+
+	/** The rendering environment of this game **/
+	Environment env = new Environment();
+
+	/**
+	 * Holds the keys that are currently being pressed.
+	 * Idea taken from Arena.java
+	 */
+	HashSet<Integer> keysDown = new HashSet<>();
 
 	/** {@code true} iff we are in shooting mode **/
 	private boolean shooting = false;
 
 	/** Key handlers for the moving mode. **/
-	HashMap<Integer, Runnable> moveHandlers = new HashMap<>();
+	private HashMap<Integer, Runnable> moveHandlers = new HashMap<>();
 
 	/** Key handlers for the shooting mode. **/
-	HashMap<Integer, Runnable> shootHandlers  = new HashMap<>();
+	private HashMap<Integer, Runnable> shootHandlers  = new HashMap<>();
 
-	Timer t;
-	private long lastTime;
+	/** Timer for rendering loop. **/
+	private Timer t;
 
-	Point3D[] corners = {
+	/** The corners of the table. **/
+	static Point3D[] corners = {
 			new Point3D( TABLE_X,  TABLE_Y,  TABLE_Z),
 			new Point3D( TABLE_X,  TABLE_Y, -TABLE_Z),
 			new Point3D( TABLE_X, -TABLE_Y,  TABLE_Z),
@@ -47,11 +62,16 @@ public class Pool3D extends JPanel {
 			new Point3D(-TABLE_X, -TABLE_Y, -TABLE_Z),
 	};
 
-	{
+	// Divide each of the points above by two here so that we don't have to
+	// have "/2" 24 times and the code looks cleaner
+	static {
 		Arrays.asList(corners).replaceAll(p -> p.divide(2));
 	}
 
-	int[][] triangles = {
+	/**
+	 * The vertices of each of the triangles as indices into {@link #corners}.
+	 */
+	static int[][] triangles = {
 			{ 0, 1, 3 }, { 0, 3, 2 },
 			{ 4, 7, 5 }, { 4, 6, 7 },
 			{ 0, 5, 1 }, { 0, 4, 5 },
@@ -60,8 +80,13 @@ public class Pool3D extends JPanel {
 			{ 0, 2, 6 }, { 0, 6, 4 },
 	};
 
-	private double rotAngle = 0.05;
+	/**
+	 * The angle by which the camera moves around the ball each frame when in
+	 * shooting mode.
+	 */
+	private static final double ROTATE_ANGLE = 0.05;
 
+	/** Constructs a new Pool3D JFrame and starts the game. **/
 	public Pool3D() {
 		env.ambientLight = 0.5;
 		env.tempLightSource = new Point3D(20, -50, 20);
@@ -94,8 +119,7 @@ public class Pool3D extends JPanel {
 		shootHandlers.put(VK_SPACE, this::shoot);
 
 		t = new Timer(16, (e) -> {
-			long time = System.currentTimeMillis();
-			Physics.nextFrame(time - lastTime);
+			Physics.nextFrame();
 
 			HashMap<Integer, Runnable> handlers =
 					shooting ? shootHandlers : moveHandlers;
@@ -115,8 +139,6 @@ public class Pool3D extends JPanel {
 
 			repaint();
 		});
-
-		lastTime = System.currentTimeMillis();
 
 		t.start();
 	}
@@ -140,12 +162,12 @@ public class Pool3D extends JPanel {
 					pool.switchMode();
 				}
 
-				keysDown.add(ke.getKeyCode());
+				pool.keysDown.add(ke.getKeyCode());
 			}
 
 			@Override
 			public void keyReleased(KeyEvent ke) {
-				keysDown.remove(ke.getKeyCode());
+				pool.keysDown.remove(ke.getKeyCode());
 			}
 		});
 	}
@@ -157,11 +179,17 @@ public class Pool3D extends JPanel {
 	}
 
 	public void shoot() {
-		balls[0].velocity = env.getCamera().position.subtract(balls[0].center).divide(-4);
+		// To get the velocity of the ball after a shot,
+		balls[0].velocity = env.getCamera().position // get the difference
+				.subtract(balls[0].center) // between the cue ball and the camera,
+				.divide(-1)   // negate it
+				.normalize(); // and normalize it
+
 		switchMode();
 	}
 
 	private void switchMode() {
+		// Can't switch to shooting mode when balls are moving
 		if (Physics.ballsAreMoving) {
 			return;
 		}
@@ -169,6 +197,7 @@ public class Pool3D extends JPanel {
 		shooting = !shooting;
 
 		if (shooting) {
+			// Move the camera to the cue ball's position
 			Camera c = new Camera(balls[0].center.add(
 					new Point3D(4, 0, 0)), new Point3D(-1, 0, 0));
 			env.setCamera(c);
@@ -176,56 +205,65 @@ public class Pool3D extends JPanel {
 	}
 
 	private void rotateRightShooting() {
-		rotateLR(rotAngle);
+		rotateLR(ROTATE_ANGLE);
 	}
 
 	private void rotateLR(double angle) {
-		Camera cam    = env.getCamera();
-		cam.position  = cam.position.subtract(balls[0].center);
-		Physics.rotateVec(cam.position, Environment.makeLRRotation(angle));
-		cam.direction = cam.position.divide(-1).normalize();
-//		double tmp = cam.direction.x;
-//		cam.direction.x = -cam.direction.y;
-//		cam.direction.y = tmp;
-		//System.out.println("" + Math.signum(cam.direction.x) + Math.signum(cam.direction.y));
-		cam.position  = cam.position.add(balls[0].center);
-		env.setCamera(cam);
+		rotateAroundCue(Environment.makeLRRotation(angle));
 	}
 
 	private void rotateLeftShooting() {
-		rotateLR(-rotAngle);
+		rotateLR(-ROTATE_ANGLE);
 	}
 
-	// XXX Neither of the below methods can be implemented currently
-	// because our camera has only one degree of freedom.
-	private void rotateUpShooting() {
-		rotateUD(rotAngle);
-	}
-
+	/**
+	 * Rotates the camera "up" or "down" around the ball by the specified
+	 * angle.
+	 * @param angle
+	 */
 	private void rotateUD(double angle) {
 		Camera cam = env.getCamera();
 		cam.position = cam.position.subtract(balls[0].center);
-		Physics.rotateVec(cam.position, makeUDRotation(angle, cam.position));
+		rotateAroundCue(makeUDRotation(angle, cam.position));
+	}
+
+	/**
+	 * Rotates the cmera around the cue ball in shooting mode.
+	 * @param rotationMat The rotation matrix to use.
+	 */
+	private void rotateAroundCue(double[][] rotationMat) {
+		Camera cam    = env.getCamera();
+		// Translate so that cue ball is at the origin
+		cam.position  = cam.position.subtract(balls[0].center);
+		// Rotate with the matrix provided
+		Physics.rotateVec(cam.position, rotationMat);
 		cam.direction = cam.position.divide(-1).normalize();
 		cam.position  = cam.position.add(balls[0].center);
 		env.setCamera(cam);
 	}
 
+	/**
+	 * Creates a rotation matrix to rotate the camera "up" or "down" around the
+	 * origin.
+	 * @param angle The angle by which to rotate.
+	 * @param cameraPos The position of the camera.
+	 * @return The rotation matrix.
+	 */
 	private double[][] makeUDRotation(double angle, Point3D cameraPos) {
 		// Vector representing the axis of rotation
-		Point3D a = cameraPos.cross(new Point3D(0, 0, 1));
+		Point3D a = cameraPos.cross(Z_UNIT_VEC);
 
 		// The matrix below only works if the axis is a unit vector
 		if (almostEq(a.dist(ORIGIN), 0)) {
 			a = Y_UNIT_VEC;
 		} else {
 			a = a.normalize();
-			a.z = 0;
 		}
 
 		double cos = Math.cos(angle);
 		double sin = Math.sin(angle);
 
+		// Same source as in Physics.findCollisionRotationMat()
 		return new double[][] {
 			{cos+a.x*a.x*(1-cos), a.x*a.y*(1-cos)-a.z*sin, a.x*a.z*(1-cos)+a.y*sin},
 			{a.y*a.x*(1-cos)+a.z*sin, cos+a.y*a.y*(1-cos), a.y*a.z*(1-cos)-a.x*sin},
@@ -233,8 +271,17 @@ public class Pool3D extends JPanel {
 		};
 	}
 
+	// XXX Neither of the below methods can be fully implemented currently
+	// because our camera has only one degree of freedom.
+	
+	/** Rotates the camera "up" around the cue ball in shooting mode. **/
+	private void rotateUpShooting() {
+		rotateUD(ROTATE_ANGLE);
+	}
+
+	/** Rotates the camera "down" around the cue ball in shooting mode. **/
 	private void rotateDownShooting() {
-		rotateUD(-rotAngle);
+		rotateUD(-ROTATE_ANGLE);
 	}
 
 }
