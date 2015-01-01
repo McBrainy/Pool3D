@@ -1,7 +1,6 @@
 package com.brianmccutchon.pool3d;
 
 import static java.awt.event.KeyEvent.*;
-import geometry.Point3D;
 
 import java.awt.Component;
 import java.awt.event.KeyAdapter;
@@ -15,7 +14,7 @@ import javax.vecmath.*;
 public class Controller {
 	private static final double MOVE_SPEED = 0.5;
 
-	private static final double ROT_SPEED = 0.05;
+	private static final double ROT_SPEED = 0.02;
 
 	/** Holds the keys that are currently being pressed. **/
 	private HashSet<Integer> keysDown = new HashSet<>();
@@ -97,9 +96,9 @@ public class Controller {
 		pool.shooting = !pool.shooting;
 
 		if (pool.shooting) {
-			//Point3D p = Physics.balls[0].center;
+			//Point3d p = Physics.balls[0].center;
 			//camTransform.lookAt(new Point3d(p.x, p.y, p.z+4),
-			//		new Point3d(p.x, p.y, p.z), new Vector3d(0, 1, 0));
+			//		p, new Vector3d(0, 1, 0));
 			camTransform.lookAt(new Point3d(0, 0, -4),
 					new Point3d(0, 0, 0), new Vector3d(0, 1, 0));
 			cam.setTransform(camTransform);
@@ -107,7 +106,7 @@ public class Controller {
 	}
 
 	void shoot() {
-
+		// TODO Write method Controller.shoot()
 	}
 
 	void moveForward() {
@@ -202,9 +201,7 @@ public class Controller {
 		camTransform.get(translateVec);
 
 		// Subtract from it the position of the cue ball
-		//Point3d cue = new Point3d(Physics.balls[0].center.x,
-		//		Physics.balls[0].center.y, Physics.balls[0].center.z);
-		//translateVec.sub(cue);
+		//translateVec.sub(Physics.balls[0].center);
 
 		// Rotate the vector
 		vecMatMult(rot, translateVec);
@@ -232,6 +229,7 @@ public class Controller {
 		rotateUpShooting(ROT_SPEED);
 	}
 
+	// FIXME Doesn't work
 	void rotateUpShooting(double angle) {
 		Vector3d translateVec = new Vector3d();
 		camTransform.get(translateVec);

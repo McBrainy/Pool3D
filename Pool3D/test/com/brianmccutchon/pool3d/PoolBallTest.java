@@ -1,28 +1,14 @@
 package com.brianmccutchon.pool3d;
 
 import static org.junit.Assert.*;
-import geometry.Point3D;
-import geometry.Tools3D;
-import geometry.Triangle3D;
 
 import java.util.Iterator;
+
+import javax.vecmath.Point3d;
 
 import org.junit.Test;
 
 public class PoolBallTest {
-
-	@Test
-	public void testWireframe() {
-		PoolBall ball = new PoolBall(0, 0, 0, null, null, 0);
-		for (Triangle3D tri : ball.getTriangles()) {
-			assertEquals(-1, Math.signum(Tools3D.sigmaVal(tri.points[0],
-					tri.points[1], tri.points[2], new Point3D(0, 0, 0))), 0.0);
-		}
-
-		assertEquals((int) (5 * Math.pow(4, PoolBall.SMOOTHNESS)),
-				new PoolBall(0, 0, 0, null, null, 0)
-						.getTriangles().size());
-	}
 
 	@Test
 	public void testRack() {
@@ -37,7 +23,7 @@ public class PoolBallTest {
 			assertEquals(counter++, b.ballNum);
 		}
 
-		assertEquals(new Point3D(0, 0, 0), balls[8].center);
+		assertEquals(new Point3d(0, 0, 0), balls[8].center);
 
 		for (int i : range(0, balls.length-1))
 			for (int j : range(i+1, balls.length-1))

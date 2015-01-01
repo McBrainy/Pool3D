@@ -1,6 +1,6 @@
 package com.brianmccutchon.pool3d;
 
-import geometry.Point3D;
+import javax.vecmath.*;
 
 /**
  * This is a purely static class containing information related to the physics
@@ -18,16 +18,16 @@ public class Physics {
 	public static final double EPSILON = Math.pow(10.0, -15);
 
 	/** A unit vector along the x axis. **/
-	static final Point3D X_UNIT_VEC = new Point3D(1, 0, 0);
+	static final Vector3d X_UNIT_VEC = new Vector3d(1, 0, 0);
 
 	/** A unit vector along the y axis. **/
-	static final Point3D Y_UNIT_VEC = new Point3D(0, 1, 0);
+	static final Vector3d Y_UNIT_VEC = new Vector3d(0, 1, 0);
 
 	/** A unit vector along the y axis. **/
-	static final Point3D Z_UNIT_VEC = new Point3D(0, 0, 1);
+	static final Vector3d Z_UNIT_VEC = new Vector3d(0, 0, 1);
 
 	/** The origin of the coordinate system: (0, 0, 0) **/
-	static final Point3D ORIGIN = new Point3D(0, 0, 0);
+	static final Point3d ORIGIN = new Point3d(0, 0, 0);
 
 	// TODO Get rid of global variables like this one.
 	// Maybe make Physics instantiable? or create a new class.
@@ -101,34 +101,24 @@ public class Physics {
 	}
 
 	/**
-	 * Normalizes a vector in place. This means that the vector will be
-	 * converted into a unit vector with the same direction as the original.
-	 * @param p The vector to nomalize.
-	 */
-	private static void normalize(Point3D p) {
-		double norm = p.dist(new Point3D(0, 0, 0));
-		p.x /= norm;
-		p.y /= norm;
-		p.z /= norm;
-	}
-
-	/**
 	 * Computes the rotation matrix that, if the balls are translated so that
 	 * ball1 is at (0, 0, 0) and the matrix is applied to the locations of the
 	 * two balls, ball2's x and y coordinates will equal 0. Also, ball2's x
 	 * coordinate should then be greater than ball1's x coordinate.
 	 * 
-	 * @param ball1 A pool ball.
-	 * @param ball2 Another pool ball.
+	 * @param center A pool ball.
+	 * @param center2 Another pool ball.
 	 * @return The collision rotation matrix.
 	 */
 	static double[][] findCollisionRotationMat(
-			Point3D ball1, Point3D ball2) {
-		Point3D ball2loc = ball2.subtract(ball1);
-		normalize(ball2loc);
+			Point3d center, Point3d center2) {
+		Vector3d ball2loc = new Vector3d();
+		ball2loc.sub(center2, center);
+		ball2loc.normalize();
 
 		// Vector representing the axis of rotation
-		Point3D a = ball2loc.cross(X_UNIT_VEC);
+		Vector3d a = new Vector3d();
+		a.cross(ball2loc, X_UNIT_VEC);
 
 		// Since ball2Loc and X_UNIT_VEC are unit vectors, the following hold:
 
@@ -136,13 +126,13 @@ public class Physics {
 		double cos = ball2loc.dot(X_UNIT_VEC);
 
 		// The magnitude of their cross product is the sin of the rotation angle
-		double sin = a.dist(ORIGIN);
+		double sin = a.length();
 
 		// The matrix below only works if the axis is a unit vector
-		if (almostEq(a.dist(ORIGIN), 0)) {
+		if (almostEq(sin, 0)) {
 			a = Y_UNIT_VEC;
 		} else {
-			normalize(a);
+			a.normalize();
 		}
 
 		// Rotation matrix given an axis and an angle. Source:
@@ -156,14 +146,14 @@ public class Physics {
 
 	/**
 	 * Rotates a vector using a provided rotation matrix.
-	 * @param v The vector to rotate.
+	 * @param velocity The vector to rotate.
 	 * @param m The 3x3 rotation matrix.
 	 */
-	static void rotateVec(Point3D v, double[][] m) {
-		v.setLocation(
-				v.x * m[0][0] + v.y * m[0][1] + v.z * m[0][2],
-				v.x * m[1][0] + v.y * m[1][1] + v.z * m[1][2],
-				v.x * m[2][0] + v.y * m[2][1] + v.z * m[2][2]);
+	static void rotateVec(Vector3d velocity, double[][] m) {
+		velocity.set(
+				velocity.x * m[0][0] + velocity.y * m[0][1] + velocity.z * m[0][2],
+				velocity.x * m[1][0] + velocity.y * m[1][1] + velocity.z * m[1][2],
+				velocity.x * m[2][0] + velocity.y * m[2][1] + velocity.z * m[2][2]);
 	}
 
 	/**
@@ -173,12 +163,12 @@ public class Physics {
 		ballsAreMoving = false;
 
 		for (PoolBall b : balls) {
-			if (almostEq(b.velocity, ORIGIN, Physics.MOVEMENT_EPSILON)) {
+			if (b.velocity.epsilonEquals(ORIGIN, MOVEMENT_EPSILON)) {
 				// "Close enough" to (0, 0, 0).
-				b.velocity.setLocation(0, 0, 0);
+				b.velocity.set(0, 0, 0);
 			} else {
 				ballsAreMoving = true; // We found a ball that is moving
-				b.center = b.center.add(b.velocity);
+				b.center.add(b.velocity);
 				doAirResistance(b.velocity);
 			}
 		}
@@ -222,33 +212,6 @@ public class Physics {
 	}
 
 	/**
-	 * Checks whether two points are almost equal in each of their three
-	 * components. That is, within {@link Physics#EPSILON}.
-	 * @param p1 A point to compare.
-	 * @param p2 A point to compare.
-	 * @return {@code true} iff they are almost equal.
-	 */
-	private static boolean almostEq(Point3D p1, Point3D p2) {
-		return almostEq(p1.x, p2.x) &&
-				almostEq(p1.y, p2.y) &&
-				almostEq(p1.z, p2.z);
-	}
-
-	/**
-	 * Checks whether two points are almost equal in each of their three
-	 * components.
-	 * @param p1 A point to compare.
-	 * @param p2 A point to compare.
-	 * @param epsilon The maximum allowed difference.
-	 * @return {@code true} iff they are almost equal.
-	 */
-	private static boolean almostEq(Point3D p1, Point3D p2, double epsilon) {
-		return almostEq(p1.x, p2.x, epsilon) &&
-				almostEq(p1.y, p2.y, epsilon) &&
-				almostEq(p1.z, p2.z, epsilon);
-	}
-
-	/**
 	 * Checks whether two numbers are almost equal to each other. That is,
 	 * within {@link Physics#EPSILON}.
 	 * @param x A number to compare.
@@ -263,7 +226,7 @@ public class Physics {
 	 * Computes linear "air resistance" on a ball's velocity.
 	 * @param p The ball's velocity.
 	 */
-	private static void doAirResistance(Point3D p) {
+	private static void doAirResistance(Vector3d p) {
 		p.x = Math.signum(p.x) * Math.max(0, Math.abs(p.x) - AIR_RESISTANCE);
 		p.y = Math.signum(p.y) * Math.max(0, Math.abs(p.y) - AIR_RESISTANCE);
 		p.z = Math.signum(p.z) * Math.max(0, Math.abs(p.z) - AIR_RESISTANCE);

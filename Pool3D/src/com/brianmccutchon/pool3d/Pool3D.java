@@ -1,72 +1,60 @@
 package com.brianmccutchon.pool3d;
 
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-
-import static java.awt.event.KeyEvent.*;
-
-import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.HashSet;
 
+import javax.media.j3d.*;
 import javax.swing.*;
+import javax.vecmath.*;
 
-import geometry.Camera;
-import geometry.Environment;
-import geometry.Point3D;
-import geometry.Triangle3D;
+import com.sun.j3d.utils.geometry.*;
+import com.sun.j3d.utils.image.TextureLoader;
+import com.sun.j3d.utils.universe.*;
+
 import static com.brianmccutchon.pool3d.Physics.*;
 
 /**
  * This class represents the main class and GUI of 3D pool.
  * Currently, the game has two modes, shooting and not shooting, as
  * represented by {@link #shooting}. Each has its own set of event handlers.
- * 
+ *
  * @author Brian McCutchon
  */
-public class Pool3D extends JPanel {
-
-	private static final long serialVersionUID = 2316556066963532682L;
-
-	/** The rendering environment of this game **/
-	Environment env = new Environment();
-
-	/**
-	 * Holds the keys that are currently being pressed.
-	 * Idea taken from Arena.java
-	 */
-	HashSet<Integer> keysDown = new HashSet<>();
+public class Pool3D {
 
 	/** {@code true} iff we are in shooting mode **/
-	private boolean shooting = false;
-
-	/** Key handlers for the moving mode. **/
-	private HashMap<Integer, Runnable> moveHandlers = new HashMap<>();
-
-	/** Key handlers for the shooting mode. **/
-	private HashMap<Integer, Runnable> shootHandlers  = new HashMap<>();
+	boolean shooting = false;
 
 	/** Timer for rendering loop. **/
 	private Timer t;
 
+	private HashMap<PoolBall, TransformGroup> ballsToSpheres = new HashMap<>();
+
 	/** The corners of the table. **/
-	static Point3D[] corners = {
-			new Point3D( TABLE_X,  TABLE_Y,  TABLE_Z),
-			new Point3D( TABLE_X,  TABLE_Y, -TABLE_Z),
-			new Point3D( TABLE_X, -TABLE_Y,  TABLE_Z),
-			new Point3D( TABLE_X, -TABLE_Y, -TABLE_Z),
-			new Point3D(-TABLE_X,  TABLE_Y,  TABLE_Z),
-			new Point3D(-TABLE_X,  TABLE_Y, -TABLE_Z),
-			new Point3D(-TABLE_X, -TABLE_Y,  TABLE_Z),
-			new Point3D(-TABLE_X, -TABLE_Y, -TABLE_Z),
+	static Point3d[] corners = {
+			new Point3d( TABLE_X,  TABLE_Y,  TABLE_Z),
+			new Point3d( TABLE_X,  TABLE_Y, -TABLE_Z),
+			new Point3d( TABLE_X, -TABLE_Y,  TABLE_Z),
+			new Point3d( TABLE_X, -TABLE_Y, -TABLE_Z),
+			new Point3d(-TABLE_X,  TABLE_Y,  TABLE_Z),
+			new Point3d(-TABLE_X,  TABLE_Y, -TABLE_Z),
+			new Point3d(-TABLE_X, -TABLE_Y,  TABLE_Z),
+			new Point3d(-TABLE_X, -TABLE_Y, -TABLE_Z),
 	};
 
 	// Divide each of the points above by two here so that we don't have to
 	// have "/2" 24 times and the code looks cleaner
 	static {
-		Arrays.asList(corners).replaceAll(p -> p.divide(2));
+		Arrays.asList(corners).forEach(p -> {
+			p.x /= 2;
+			p.y /= 2;
+			p.z /= 2;
+		});
 	}
+
+	Controller controls;
 
 	/**
 	 * The vertices of each of the triangles as indices into {@link #corners}.
@@ -80,208 +68,134 @@ public class Pool3D extends JPanel {
 			{ 0, 2, 6 }, { 0, 6, 4 },
 	};
 
-	/**
-	 * The angle by which the camera moves around the ball each frame when in
-	 * shooting mode.
-	 */
-	private static final double ROTATE_ANGLE = 0.05;
-
 	/** Constructs a new Pool3D JFrame and starts the game. **/
 	public Pool3D() {
-		env.ambientLight = 0.5;
-		env.tempLightSource = new Point3D(20, -50, 20);
+		SimpleUniverse univ = new SimpleUniverse();
+		BranchGroup group = new BranchGroup();
 
-		Arrays.asList(balls).forEach(env::addObject);
-		for (int[] tri : triangles) {
-			env.addTriangle(new Triangle3D(corners[tri[0]],
-					corners[tri[1]], corners[tri[2]], Color.GREEN));
+		controls = new Controller(this, univ.getCanvas(),
+				univ.getViewingPlatform().getViewPlatformTransform());
+
+		for (PoolBall ball : balls) {
+			TransformGroup ballSphere = makeBallSphere(ball);
+			ballsToSpheres.put(ball, ballSphere);
+			group.addChild(ballSphere);
 		}
 
-		moveHandlers.put(VK_RIGHT, env::rotateRight);
-		moveHandlers.put(VK_LEFT,  env::rotateLeft);
-		moveHandlers.put(VK_DOWN,  env::moveBackward);
-		moveHandlers.put(VK_UP,    env::moveForward);
-		moveHandlers.put(VK_S,     env::moveDown);
-		moveHandlers.put(VK_W,     env::moveUp);
-		moveHandlers.put(VK_D,     env::moveRight);
-		moveHandlers.put(VK_A,     env::moveLeft);
-		moveHandlers.put(VK_OPEN_BRACKET,  env::nearFarther);
-		moveHandlers.put(VK_CLOSE_BRACKET, env::nearCloser);
+		// Add a directional light
+		DirectionalLight light1 = new DirectionalLight(
+				new Color3f(1, 1, 1),
+				new Vector3f(-8.0f, -14.0f, -6.0f));
+		light1.setInfluencingBounds(
+				new BoundingSphere(new Point3d(0, 0, 0), Double.POSITIVE_INFINITY));
+		group.addChild(light1);
 
-		shootHandlers.put(VK_RIGHT, this::rotateRightShooting);
-		shootHandlers.put(VK_D,     this::rotateRightShooting);
-		shootHandlers.put(VK_LEFT,  this::rotateLeftShooting);
-		shootHandlers.put(VK_A,     this::rotateLeftShooting);
-		shootHandlers.put(VK_DOWN,  this::rotateDownShooting);
-		shootHandlers.put(VK_S,     this::rotateDownShooting);
-		shootHandlers.put(VK_UP,    this::rotateUpShooting);
-		shootHandlers.put(VK_W,     this::rotateUpShooting);
-		shootHandlers.put(VK_SPACE, this::shoot);
+		univ.getViewingPlatform().setNominalViewingTransform();
+		univ.addBranchGraph(group);
+
+		//for (int[] tri : triangles) {
+		//	env.addTriangle(new Triangle3D(corners[tri[0]],
+		//			corners[tri[1]], corners[tri[2]], Color.GREEN));
+		//}
 
 		t = new Timer(16, (e) -> {
 			Physics.nextFrame();
-
-			HashMap<Integer, Runnable> handlers =
-					shooting ? shootHandlers : moveHandlers;
-
-			for (int i : keysDown) {
-				if (handlers.containsKey(i)) {
-					handlers.get(i).run();
-				}
-			}
-
-			/* This works too (same as above)
-			keysDown.stream()
-				.filter(handlers::containsKey)
-				.map(handlers::get)
-				.forEach(Runnable::run);
-			*/
-
-			repaint();
+			controls.processEvents();
 		});
 
 		t.start();
 	}
 
 	public static void main(String[] args) {
-		Pool3D pool = new Pool3D();
-		for (int i = 0; i < 20; i++) {
-			pool.env.moveBackward();
-		}
-
+		new Pool3D();
+		/*
 		JFrame frame = new JFrame();
-		frame.setSize(new Dimension(800, 800));
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.add(pool);
+		JLabel label = new JLabel();
+		label.setIcon(new ImageIcon(makeTextureImage(PoolBall.create(6))));
+		frame.add(label);
+		frame.pack();
 		frame.setVisible(true);
-
-		frame.addKeyListener(new KeyAdapter() {
-			@Override
-			public void keyPressed(KeyEvent ke) {
-				if (ke.getKeyCode() == VK_Q) {
-					pool.switchMode();
-				}
-
-				pool.keysDown.add(ke.getKeyCode());
-			}
-
-			@Override
-			public void keyReleased(KeyEvent ke) {
-				pool.keysDown.remove(ke.getKeyCode());
-			}
-		});
+		*/
 	}
 
-	@Override
-	public void paint(Graphics gg) {
-		Graphics2D g = (Graphics2D) gg;
-		env.render(g);
+	static TransformGroup makeBallSphere(PoolBall ball) {
+
+		Color3f white = new Color3f(Color.WHITE);
+		Color3f black = new Color3f(Color.BLACK);
+
+		Appearance appear = new Appearance();
+
+		// Make a material so that shading can work
+		Material mat = new Material(white, black, white, black, 1);
+		appear.setMaterial(mat);
+
+		// Apply texture
+		BufferedImage img = makeTextureImage(ball);
+		Texture tex = new TextureLoader(img).getTexture();
+		tex.setBoundaryModeS(Texture.WRAP);
+		tex.setBoundaryModeT(Texture.WRAP);
+		appear.setTexture(tex);
+
+		// Set the mode for the texture so that it can be shaded properly
+		TextureAttributes texAttr = new TextureAttributes();
+		texAttr.setTextureMode(TextureAttributes.MODULATE);
+		appear.setTextureAttributes(texAttr);
+
+		// Create a ball and add it to the group of objects
+		Sphere sphere = new Sphere(1, Primitive.GENERATE_NORMALS |
+				Primitive.GENERATE_TEXTURE_COORDS, 200, appear);
+		TransformGroup group = new TransformGroup();
+		group.addChild(sphere);
+
+		// Set the proper translation
+		// TODO Make PoolBall hold a Transform3D instead of just a center point
+		// This will allow spinning and make for fewer conversions
+		Transform3D trans = new Transform3D();
+		trans.set(new Vector3d(ball.center));
+		group.setTransform(trans);
+
+		return group;
 	}
 
-	public void shoot() {
-		// To get the velocity of the ball after a shot,
-		balls[0].velocity = env.getCamera().position // get the difference
-				.subtract(balls[0].center) // between the cue ball and the camera,
-				.divide(-1)   // negate it
-				.normalize(); // and normalize it
+	static BufferedImage makeTextureImage(PoolBall ball) {
+		int height = 1 << 9;
+		int width  = 2 * height;
 
-		switchMode();
-	}
+		BufferedImage img = new BufferedImage(width, height,
+				BufferedImage.TYPE_INT_RGB);
+		Graphics2D g = img.createGraphics();
+		g.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+				RenderingHints.VALUE_ANTIALIAS_ON);
+		g.fillRect(0, 0, width, height);
 
-	private void switchMode() {
-		// Can't switch to shooting mode when balls are moving
-		if (Physics.ballsAreMoving) {
-			return;
+		if (ball.type != BallType.CUE) {
+			g.setColor(ball.hue.get());
+			int margin = (ball.type == BallType.STRIPE) ?
+					(int) (height / 3.5) : 0;
+			g.fillRect(0, margin, width, height - 2*margin);
+
+			drawNumber(g, ball.ballNum, width/4,   height/2, height/7);
+			drawNumber(g, ball.ballNum, width/4*3, height/2, height/7);
 		}
 
-		shooting = !shooting;
-
-		if (shooting) {
-			// Move the camera to the cue ball's position
-			Camera c = new Camera(balls[0].center.add(
-					new Point3D(4, 0, 0)), new Point3D(-1, 0, 0));
-			env.setCamera(c);
-		}
+		return img;
 	}
 
-	private void rotateRightShooting() {
-		rotateLR(ROTATE_ANGLE);
+	private static void drawNumber(Graphics2D g,
+			int number, int x, int y, int radius) {
+		g.setColor(Color.WHITE);
+		g.fillOval(x-radius, y-radius, radius*2, radius*2);
+
+		g.setColor(Color.BLACK);
+		g.setFont(g.getFont().deriveFont(100f));
+		drawStringCentered(g, Integer.toString(number), x, y);
 	}
 
-	private void rotateLR(double angle) {
-		rotateAroundCue(Environment.makeLRRotation(angle));
-	}
-
-	private void rotateLeftShooting() {
-		rotateLR(-ROTATE_ANGLE);
-	}
-
-	/**
-	 * Rotates the camera "up" or "down" around the ball by the specified
-	 * angle.
-	 * @param angle
-	 */
-	private void rotateUD(double angle) {
-		Camera cam = env.getCamera();
-		cam.position = cam.position.subtract(balls[0].center);
-		rotateAroundCue(makeUDRotation(angle, cam.position));
-	}
-
-	/**
-	 * Rotates the cmera around the cue ball in shooting mode.
-	 * @param rotationMat The rotation matrix to use.
-	 */
-	private void rotateAroundCue(double[][] rotationMat) {
-		Camera cam    = env.getCamera();
-		// Translate so that cue ball is at the origin
-		cam.position  = cam.position.subtract(balls[0].center);
-		// Rotate with the matrix provided
-		Physics.rotateVec(cam.position, rotationMat);
-		cam.direction = cam.position.divide(-1).normalize();
-		cam.position  = cam.position.add(balls[0].center);
-		env.setCamera(cam);
-	}
-
-	/**
-	 * Creates a rotation matrix to rotate the camera "up" or "down" around the
-	 * origin.
-	 * @param angle The angle by which to rotate.
-	 * @param cameraPos The position of the camera.
-	 * @return The rotation matrix.
-	 */
-	private double[][] makeUDRotation(double angle, Point3D cameraPos) {
-		// Vector representing the axis of rotation
-		Point3D a = cameraPos.cross(Z_UNIT_VEC);
-
-		// The matrix below only works if the axis is a unit vector
-		if (almostEq(a.dist(ORIGIN), 0)) {
-			a = Y_UNIT_VEC;
-		} else {
-			a = a.normalize();
-		}
-
-		double cos = Math.cos(angle);
-		double sin = Math.sin(angle);
-
-		// Same source as in Physics.findCollisionRotationMat()
-		return new double[][] {
-			{cos+a.x*a.x*(1-cos), a.x*a.y*(1-cos)-a.z*sin, a.x*a.z*(1-cos)+a.y*sin},
-			{a.y*a.x*(1-cos)+a.z*sin, cos+a.y*a.y*(1-cos), a.y*a.z*(1-cos)-a.x*sin},
-			{a.z*a.x*(1-cos)-a.y*sin, a.z*a.y*(1-cos)+a.x*sin, cos+a.z*a.z*(1-cos)}
-		};
-	}
-
-	// XXX Neither of the below methods can be fully implemented currently
-	// because our camera has only one degree of freedom.
-	
-	/** Rotates the camera "up" around the cue ball in shooting mode. **/
-	private void rotateUpShooting() {
-		rotateUD(ROTATE_ANGLE);
-	}
-
-	/** Rotates the camera "down" around the cue ball in shooting mode. **/
-	private void rotateDownShooting() {
-		rotateUD(-ROTATE_ANGLE);
+	private static void drawStringCentered(Graphics2D g,
+			String string, int x, int y) {
+		FontMetrics fm = g.getFontMetrics();
+		g.drawString(string, x - fm.stringWidth(string)/2, y -
+				(fm.getAscent() + fm.getDescent())/2 + fm.getAscent());
 	}
 
 }

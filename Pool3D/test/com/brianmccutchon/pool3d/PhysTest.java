@@ -1,7 +1,7 @@
 package com.brianmccutchon.pool3d;
 
 import static org.junit.Assert.*;
-import geometry.Point3D;
+import javax.vecmath.*;
 
 import org.junit.Test;
 
@@ -49,31 +49,31 @@ public class PhysTest {
 
 	@Test
 	public void testRotationMat() {
-		Point3D ball1 = new Point3D(0, 0, 0);
-		Point3D ball2 = new Point3D(PoolBall.DIAMETER - Physics.EPSILON, 0, 0);
+		Point3d ball1 = new Point3d(0, 0, 0);
+		Point3d ball2 = new Point3d(PoolBall.DIAMETER - Physics.EPSILON, 0, 0);
 
 		// No rotation required, should return the identity matrix
 		assertArrayEquals(identity,
 				Physics.findCollisionRotationMat(ball1, ball2));
 
-		checkRotationMat(new Point3D(2, 2, 2),
-				new Point3D(2 + Math.sqrt(PoolBall.DIAMETER),
+		checkRotationMat(new Point3d(2, 2, 2),
+				new Point3d(2 + Math.sqrt(PoolBall.DIAMETER),
 						2 + Math.sqrt(PoolBall.DIAMETER), 2));
 
-		checkRotationMat(new Point3D(-2, -3, -5),
-				new Point3D(-2, -3 - Math.sqrt(PoolBall.DIAMETER),
+		checkRotationMat(new Point3d(-2, -3, -5),
+				new Point3d(-2, -3 - Math.sqrt(PoolBall.DIAMETER),
 						-5 + Math.sqrt(PoolBall.DIAMETER)));
 
-		checkRotationMat(new Point3D(5, 4, 3), new Point3D(6, 5, 2));
+		checkRotationMat(new Point3d(5, 4, 3), new Point3d(6, 5, 2));
 	}
 
 	/**
 	 * Performs assertions to ensure that the rotation matrix is computed
 	 * correctly for the two pool balls provided.
 	 */
-	private void checkRotationMat(Point3D p1, Point3D p2) {
-		Point3D ball1 = new Point3D(p1.x, p1.y, p1.z);
-		Point3D ball2 = new Point3D(p2.x, p2.y, p2.z);
+	private void checkRotationMat(Point3d p1, Point3d p2) {
+		Point3d ball1 = new Point3d(p1.x, p1.y, p1.z);
+		Point3d ball2 = new Point3d(p2.x, p2.y, p2.z);
 
 		double[][] rotationMat =
 				Physics.findCollisionRotationMat(ball1, ball2);
@@ -81,7 +81,8 @@ public class PhysTest {
 		// Every rotation matrix should have a determinant of 1.0
 		assertEquals(1.0, determinant(rotationMat), Physics.EPSILON);
 
-		Point3D p = ball2.subtract(ball1);
+		Vector3d p = new Vector3d();
+		p.sub(ball2, ball1);
 		Physics.rotateVec(p, rotationMat);
 
 		assertEquals(0.0, p.y, Physics.EPSILON);
@@ -94,27 +95,27 @@ public class PhysTest {
 		PoolBall ball2 = new PoolBall(
 				PoolBall.DIAMETER - Physics.EPSILON, 0, 0, null, null, 1);
 
-		ball1.velocity.setLocation( 1, 0, 0);
-		ball2.velocity.setLocation(-1, 0, 0);
+		ball1.velocity.set( 1, 0, 0);
+		ball2.velocity.set(-1, 0, 0);
 
 		Physics.handleCollision(ball1, ball2);
 
-		assertEquals(new Point3D(-1, 0, 0), ball1.velocity);
-		assertEquals(new Point3D( 1, 0, 0), ball2.velocity);
+		assertEquals(new Point3d(-1, 0, 0), ball1.velocity);
+		assertEquals(new Point3d( 1, 0, 0), ball2.velocity);
 
 		// Now they're headed in opposite directions; a collision check
 		// shouldn't do anything
 		Physics.handleCollision(ball1, ball2);
 
-		assertEquals(new Point3D(-1, 0, 0), ball1.velocity);
-		assertEquals(new Point3D( 1, 0, 0), ball2.velocity);
+		assertEquals(new Point3d(-1, 0, 0), ball1.velocity);
+		assertEquals(new Point3d( 1, 0, 0), ball2.velocity);
 
 		// Now with a nonzero y in velocity
 		ball1 = new PoolBall(2, 2, 2, null, null, 0);
 		ball2 = new PoolBall(2 + Math.sqrt(PoolBall.DIAMETER),
 				2 + Math.sqrt(PoolBall.DIAMETER), 2, null, null, 0);
-		ball1.velocity.setLocation(0, 0, 0);
-		ball2.velocity.setLocation(-Math.sqrt(2), -Math.sqrt(2), 0);
+		ball1.velocity.set(0, 0, 0);
+		ball2.velocity.set(-Math.sqrt(2), -Math.sqrt(2), 0);
 
 		Physics.handleCollision(ball1, ball2);
 
@@ -126,8 +127,8 @@ public class PhysTest {
 		ball1 = new PoolBall(5, 4, 3, null, null, 0);
 		ball2 = new PoolBall(6, 5, 2, null, null, 0);
 
-		ball1.velocity.setLocation(2, 2, 2);
-		ball2.velocity.setLocation(0, 0, 0);
+		ball1.velocity.set(2, 2, 2);
+		ball2.velocity.set(0, 0, 0);
 
 		Physics.handleCollision(ball2, ball1);
 
@@ -152,7 +153,7 @@ public class PhysTest {
 
 		// What if the balls are going in the same direction,
 		// but still getting farther apart?
-		ball2.velocity.setLocation(1.3, 1.3, 2.0);
+		ball2.velocity.set(1.3, 1.3, 2.0);
 
 		Physics.handleCollision(ball1, ball2);
 
