@@ -30,6 +30,18 @@ public class Controller {
 	private Transform3D    camTransform;
 	private Pool3D pool;
 
+	/**
+	 * The camera's first degree of freedom, a rotation around the y axis.
+	 * This only applies in shooting mode.
+	 */
+	public double camDeg1 = 0.0;
+
+	/**
+	 * The camera's second degree of freedom, a rotation towards the y axis.
+	 * This only applies in shooting mode.
+	 */
+	public double camDeg2 = 0.0;
+
 	public Controller(Pool3D pool, Component comp, TransformGroup camera) {
 		this.pool = pool;
 		cam = camera;
@@ -96,12 +108,9 @@ public class Controller {
 		pool.shooting = !pool.shooting;
 
 		if (pool.shooting) {
-			//Point3d p = Physics.balls[0].center;
-			//camTransform.lookAt(new Point3d(p.x, p.y, p.z+4),
-			//		p, new Vector3d(0, 1, 0));
-			camTransform.lookAt(new Point3d(0, 0, -4),
-					new Point3d(0, 0, 0), new Vector3d(0, 1, 0));
-			cam.setTransform(camTransform);
+			camDeg1 = 0;
+			camDeg2 = 0;
+			applyShootingRotation();
 		}
 	}
 
@@ -189,35 +198,34 @@ public class Controller {
 	}
 
 	void rotateRightShooting(double angle) {
+		camDeg1 = (camDeg1 + angle) % (Math.PI * 2);
+		applyShootingRotation();
+	}
+
+	private void applyShootingRotation() {
 		Matrix3d rot = new Matrix3d();
-		rot.rotY(angle);
+		rot.rotY(camDeg1);
+		Matrix3d temp = new Matrix3d();
+		temp.rotX(camDeg2);
+		rot.mul(temp);
 		rotateAroundCue(rot);
 	}
-	
+
 	void rotateAroundCue(Matrix3d rot) {
 		// Rotate the camera around the cue ball
 		// Get the translational component of the camera's transform
-		Vector3d translateVec = new Vector3d();
-		camTransform.get(translateVec);
-
-		// Subtract from it the position of the cue ball
-		//translateVec.sub(Physics.balls[0].center);
+		Vector3d translateVec = new Vector3d(0, 0, -4);
 
 		// Rotate the vector
 		vecMatMult(rot, translateVec);
 
+		translateVec.negate();
+
 		// Add the cue ball back
-		//translateVec.add(cue);
-
-		// Get the old rotation of the camera
-		Matrix3d oldRot = new Matrix3d();
-		camTransform.get(oldRot);
-
-		// Add the new rotation to it
-		oldRot.mul(rot);
+		translateVec.add(Physics.balls[0].center);
 
 		// Set the camera's transform to the rotation and translation
-		camTransform = new Transform3D(oldRot, translateVec, 1);
+		camTransform = new Transform3D(rot, translateVec, 1);
 		cam.setTransform(camTransform);
 	}
 
@@ -229,16 +237,9 @@ public class Controller {
 		rotateUpShooting(ROT_SPEED);
 	}
 
-	// FIXME Doesn't work
 	void rotateUpShooting(double angle) {
-		Vector3d translateVec = new Vector3d();
-		camTransform.get(translateVec);
-		//translateVec.sub(cue);
-		Vector3d axis = new Vector3d();
-		axis.cross(translateVec, new Vector3d(0, 1, 0));
-		Matrix3d rot = new Matrix3d();
-		rot.set(new AxisAngle4d(axis, -angle));
-		rotateAroundCue(rot);
+		camDeg2 = (camDeg2 - angle) % (Math.PI * 2);
+		applyShootingRotation();
 	}
 
 }
