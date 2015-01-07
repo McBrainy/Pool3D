@@ -16,6 +16,12 @@ public class Controller {
 
 	private static final double ROT_SPEED = 0.02;
 
+	/**
+	 * The translation of the camera from the ball when {@link #camDeg1} and
+	 * {@link #camDeg2} are both zero.
+	 */
+	private static final Vector3d SHOOTING_TRANS = new Vector3d(0, 0, -6);
+
 	/** Holds the keys that are currently being pressed. **/
 	private HashSet<Integer> keysDown = new HashSet<>();
 
@@ -115,7 +121,11 @@ public class Controller {
 	}
 
 	void shoot() {
-		// TODO Write method Controller.shoot()
+		Vector3d translation = new Vector3d();
+		camTransform.get(translation);
+		Physics.balls[0].velocity.sub(Physics.balls[0].center, translation);
+		Physics.balls[0].velocity.normalize();
+		pool.shooting = false;
 	}
 
 	void moveForward() {
@@ -214,7 +224,7 @@ public class Controller {
 	void rotateAroundCue(Matrix3d rot) {
 		// Rotate the camera around the cue ball
 		// Get the translational component of the camera's transform
-		Vector3d translateVec = new Vector3d(0, 0, -4);
+		Vector3d translateVec = new Vector3d(SHOOTING_TRANS);
 
 		// Rotate the vector
 		vecMatMult(rot, translateVec);
