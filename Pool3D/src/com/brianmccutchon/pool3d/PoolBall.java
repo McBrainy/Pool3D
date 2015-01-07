@@ -2,6 +2,7 @@ package com.brianmccutchon.pool3d;
 
 import java.util.*;
 
+import javax.media.j3d.Transform3D;
 import javax.vecmath.*;
 
 import static com.brianmccutchon.pool3d.BallType.*;
@@ -24,11 +25,13 @@ public class PoolBall {
 	/** The number of this ball. 0 if it is the cue ball. **/
 	public final int ballNum;
 
-	/** The location of the center of this PoolBall. **/
-	public Point3d center;
+	/** The translation of this PoolBall from the origin. **/
+	private Vector3d translation;
 
 	/** The velocity of the ball. **/
 	public Vector3d velocity;
+
+	public Transform3D transform;
 
 	/** Just a couple of color constants. **/
 	private static final Color3f
@@ -86,7 +89,7 @@ public class PoolBall {
 	 * Constructs a new PoolBall, requiring the caller to supply data about it.
 	 * To have the data automatically determined by the ball number, use
 	 * {@link PoolBall#create(int)}.
-	 * 
+	 *
 	 * @param x The x-coordinate of the center of this pool ball.
 	 * @param y The y-coordinate of the center of this pool ball.
 	 * @param z The z-coordinate of the center of this pool ball.
@@ -99,17 +102,28 @@ public class PoolBall {
 	 */
 	public PoolBall(double x, double y, double z,
 			Color3f hue, BallType type, int ballNum) {
-		this.center    = new Point3d(x, y, z);
+		this.translation    = new Vector3d(x, y, z);
 		this.hue       = hue;
 		this.type      = type;
 		this.ballNum   = ballNum;
 		this.velocity  = new Vector3d(0, 0, 0);
+		this.transform = new Transform3D();
+		transform.set(new Vector3d(x, y, z));
+	}
+
+	public Vector3d getTranslation() {
+		return new Vector3d(translation);
+	}
+
+	public void setTranslation(Vector3d trans) {
+		this.translation.set(trans);
+		transform.set(trans);
 	}
 
 	/**
 	 * Constructs a new PoolBall using the default values for a ball with this
 	 * number.
-	 * 
+	 *
 	 * @param ballNum The number of this ball. 0 if it is the cue ball.
 	 */
 	public PoolBall(int ballNum) {
@@ -121,12 +135,12 @@ public class PoolBall {
 	/**
 	 * Returns a new PoolBall with the given ball number and the default values
 	 * for a ball with this number.
-	 * 
+	 *
 	 * @param ballNum The number of this ball. 0 if it is the cue ball.
 	 */
 	public static PoolBall create(int ballNum) {
 		PoolBall ball = balls[ballNum];
-		return new PoolBall(ball.center.x, ball.center.y, ball.center.z,
+		return new PoolBall(ball.translation.x, ball.translation.y, ball.translation.z,
 				ball.hue, ball.type, ballNum);
 	}
 
@@ -150,19 +164,22 @@ public class PoolBall {
 		for (int i = 0; i < retVal.length; i++) {
 			retVal[i] = PoolBall.create(i);
 			if (i != 8 && i != 0) { // The two balls w/ set posns
-				retVal[i].center = rackLocations.get(counter++);
+				retVal[i].translation = new Vector3d(rackLocations.get(counter++));
 			}
 		}
 
-		retVal[0].center = new Point3d(10, 0, 0);
-		retVal[8].center = new Point3d(0, 0, 0);
+		retVal[0].translation = new Vector3d(10, 0, 0);
+		retVal[8].translation = new Vector3d(0, 0, 0);
 
 		return retVal;
 	}
 
 	/** Determines if this pool ball intersects with another pool ball. **/
 	public boolean intersects(PoolBall pb) {
-		return center.distanceSquared(pb.center) < DIAMETER_SQUARED;
+		double xDiff = translation.x - pb.translation.x;
+		double yDiff = translation.y - pb.translation.y;
+		double zDiff = translation.z - pb.translation.z;
+		return xDiff*xDiff + yDiff*yDiff + zDiff*zDiff < DIAMETER_SQUARED;
 	}
 
 	/**
@@ -187,12 +204,12 @@ public class PoolBall {
 	@Override
 	public String toString() {
 		return "PoolBall: " + (ballNum == 0 ? "Cue" : ballNum) +
-				"; " + center;
+				"; " + translation;
 	}
 
 	@Override
 	public Object clone() {
-		return new PoolBall(center.x, center.y, center.z,
+		return new PoolBall(translation.x, translation.y, translation.z,
 				hue, type, ballNum);
 	}
 

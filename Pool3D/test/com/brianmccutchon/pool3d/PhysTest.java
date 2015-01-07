@@ -49,8 +49,8 @@ public class PhysTest {
 
 	@Test
 	public void testRotationMat() {
-		Point3d ball1 = new Point3d(0, 0, 0);
-		Point3d ball2 = new Point3d(PoolBall.DIAMETER - Physics.EPSILON, 0, 0);
+		Vector3d ball1 = new Vector3d(0, 0, 0);
+		Vector3d ball2 = new Vector3d(PoolBall.DIAMETER - Physics.EPSILON, 0, 0);
 
 		// No rotation required, should return the identity matrix
 		assertArrayEquals(identity,
@@ -72,8 +72,8 @@ public class PhysTest {
 	 * correctly for the two pool balls provided.
 	 */
 	private void checkRotationMat(Point3d p1, Point3d p2) {
-		Point3d ball1 = new Point3d(p1.x, p1.y, p1.z);
-		Point3d ball2 = new Point3d(p2.x, p2.y, p2.z);
+		Vector3d ball1 = new Vector3d(p1.x, p1.y, p1.z);
+		Vector3d ball2 = new Vector3d(p2.x, p2.y, p2.z);
 
 		double[][] rotationMat =
 				Physics.findCollisionRotationMat(ball1, ball2);

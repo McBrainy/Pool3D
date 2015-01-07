@@ -60,7 +60,8 @@ public class Physics {
 	 * determined to be intersecting.
 	 */
 	public static void handleCollision(PoolBall ball1, PoolBall ball2) {
-		double[][] rotMatrix = findCollisionRotationMat(ball1.center, ball2.center);
+		double[][] rotMatrix = findCollisionRotationMat(
+				ball1.getTranslation(), ball2.getTranslation());
 
 		// Rotate so only x values matter
 		rotateVec(ball1.velocity, rotMatrix);
@@ -111,7 +112,7 @@ public class Physics {
 	 * @return The collision rotation matrix.
 	 */
 	static double[][] findCollisionRotationMat(
-			Point3d center, Point3d center2) {
+			Vector3d center, Vector3d center2) {
 		Vector3d ball2loc = new Vector3d();
 		ball2loc.sub(center2, center);
 		ball2loc.normalize();
@@ -168,7 +169,9 @@ public class Physics {
 				b.velocity.set(0, 0, 0);
 			} else {
 				ballsAreMoving = true; // We found a ball that is moving
-				b.center.add(b.velocity);
+				Vector3d trans = b.getTranslation();
+				trans.add(b.velocity);
+				b.setTranslation(trans);
 				doAirResistance(b.velocity);
 			}
 		}
@@ -183,19 +186,29 @@ public class Physics {
 
 		// Check whether it is hitting a wall
 		for (PoolBall b : balls) {
-			if (Math.abs(b.center.x) + 1 > TABLE_X/2 &&
-					Math.signum(b.center.x) == Math.signum(b.velocity.x)) {
+			if (hitsWall(b.getTranslation().x, b.velocity.x, TABLE_X)) {
 				b.velocity.x = -b.velocity.x;
 			}
-			if (Math.abs(b.center.y) + 1 > TABLE_Y/2 &&
-					Math.signum(b.center.y) == Math.signum(b.velocity.y)) {
+			if (hitsWall(b.getTranslation().y, b.velocity.y, TABLE_Y)) {
 				b.velocity.y = -b.velocity.y;
 			}
-			if (Math.abs(b.center.z) + 1 > TABLE_Z/2 &&
-					Math.signum(b.center.z) == Math.signum(b.velocity.z)) {
+			if (hitsWall(b.getTranslation().z, b.velocity.z, TABLE_Z)) {
 				b.velocity.z = -b.velocity.z;
 			}
 		}
+	}
+
+	/**
+	 * Determines if a ball is hitting a wall using the specified component.
+	 * @param comp     The component of the ball's translation
+	 * @param velComp  The same component of the ball's velocity
+	 * @param tableDim The dimension of the table along this component
+	 * @return {@code true} iff the ball hits one of the two walls along this
+	 *   component.
+	 */
+	private static boolean hitsWall(double comp, double velComp, int tableDim) {
+		return (Math.abs(comp) + PoolBall.RADIUS > tableDim/2 &&
+				Math.signum(comp) == Math.signum(velComp));
 	}
 
 	/**

@@ -85,13 +85,14 @@ public class Pool3D {
 		// Add a directional light
 		DirectionalLight light1 = new DirectionalLight(
 				new Color3f(1, 1, 1),
-				new Vector3f(-8.0f, -14.0f, -6.0f));
+				new Vector3f(-4.0f, -7.0f, -3.0f));
 		light1.setInfluencingBounds(
-				new BoundingSphere(new Point3d(0, 0, 0), Double.POSITIVE_INFINITY));
+				new BoundingSphere(new Point3d(0, 0, 0), 100));
 		group.addChild(light1);
 
 		univ.getViewingPlatform().setNominalViewingTransform();
 		univ.addBranchGraph(group);
+		univ.getViewer().getView().setBackClipDistance(100);
 
 		//for (int[] tri : triangles) {
 		//	env.addTriangle(new Triangle3D(corners[tri[0]],
@@ -100,26 +101,26 @@ public class Pool3D {
 
 		t = new Timer(16, (e) -> {
 			Physics.nextFrame();
+			updateGraphics();
 			controls.processEvents();
 		});
 
 		t.start();
 	}
 
+	private void updateGraphics() {
+		for (PoolBall b : balls) {
+			Transform3D trans = new Transform3D();
+			trans.set(b.getTranslation());
+			ballsToSpheres.get(b).setTransform(trans);
+		}
+	}
+
 	public static void main(String[] args) {
 		new Pool3D();
-		/*
-		JFrame frame = new JFrame();
-		JLabel label = new JLabel();
-		label.setIcon(new ImageIcon(makeTextureImage(PoolBall.create(6))));
-		frame.add(label);
-		frame.pack();
-		frame.setVisible(true);
-		*/
 	}
 
 	static TransformGroup makeBallSphere(PoolBall ball) {
-
 		Color3f white = new Color3f(Color.WHITE);
 		Color3f black = new Color3f(Color.BLACK);
 
@@ -146,12 +147,11 @@ public class Pool3D {
 				Primitive.GENERATE_TEXTURE_COORDS, 200, appear);
 		TransformGroup group = new TransformGroup();
 		group.addChild(sphere);
+		group.setCapability(TransformGroup.ALLOW_TRANSFORM_WRITE);
 
 		// Set the proper translation
-		// TODO Make PoolBall hold a Transform3D instead of just a center point
-		// This will allow spinning and make for fewer conversions
 		Transform3D trans = new Transform3D();
-		trans.set(new Vector3d(ball.center));
+		trans.set(ball.getTranslation());
 		group.setTransform(trans);
 
 		return group;

@@ -23,7 +23,7 @@ public class PoolBallTest {
 			assertEquals(counter++, b.ballNum);
 		}
 
-		assertEquals(new Point3d(0, 0, 0), balls[8].center);
+		assertEquals(new Point3d(0, 0, 0), balls[8].getTranslation());
 
 		for (int i : range(0, balls.length-1))
 			for (int j : range(i+1, balls.length-1))

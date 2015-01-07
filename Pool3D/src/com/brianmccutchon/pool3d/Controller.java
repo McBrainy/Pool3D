@@ -123,7 +123,7 @@ public class Controller {
 	void shoot() {
 		Vector3d translation = new Vector3d();
 		camTransform.get(translation);
-		Physics.balls[0].velocity.sub(Physics.balls[0].center, translation);
+		Physics.balls[0].velocity.sub(Physics.balls[0].getTranslation(), translation);
 		Physics.balls[0].velocity.normalize();
 		pool.shooting = false;
 	}
@@ -232,7 +232,7 @@ public class Controller {
 		translateVec.negate();
 
 		// Add the cue ball back
-		translateVec.add(Physics.balls[0].center);
+		translateVec.add(Physics.balls[0].getTranslation());
 
 		// Set the camera's transform to the rotation and translation
 		camTransform = new Transform3D(rot, translateVec, 1);
