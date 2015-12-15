@@ -26,7 +26,7 @@ public class PoolBall {
 	public final int ballNum;
 
 	/** The translation of this PoolBall from the origin. **/
-	private Vector3d translation;
+	private Vector3d translation = new Vector3d();
 
 	/** The velocity of the ball. **/
 	public Vector3d velocity;
@@ -102,13 +102,22 @@ public class PoolBall {
 	 */
 	public PoolBall(double x, double y, double z,
 			Color3f hue, BallType type, int ballNum) {
-		this.translation    = new Vector3d(x, y, z);
 		this.hue       = hue;
 		this.type      = type;
 		this.ballNum   = ballNum;
 		this.velocity  = new Vector3d(0, 0, 0);
 		this.transform = new Transform3D();
-		transform.set(new Vector3d(x, y, z));
+
+		// Generate a random rotation -- not uniform, but good enough
+		Transform3D rotX = new Transform3D();
+		rotX.rotX(Math.random()*Math.PI*2);
+		Transform3D rotY = new Transform3D();
+		rotY.rotY(Math.random()*Math.PI*2);
+		transform.rotZ(Math.random()*Math.PI*2);
+		transform.mul(rotY);
+		transform.mul(rotX);
+
+		setTranslation(new Vector3d(x, y, z));
 	}
 
 	public Vector3d getTranslation() {
@@ -117,7 +126,12 @@ public class PoolBall {
 
 	public void setTranslation(Vector3d trans) {
 		this.translation.set(trans);
+		Matrix3d rot = new Matrix3d();
+		transform.get(rot);
+		Transform3D rotTrans = new Transform3D();
+		rotTrans.set(rot);
 		transform.set(trans);
+		transform.mul(rotTrans);
 	}
 
 	/**
@@ -140,8 +154,8 @@ public class PoolBall {
 	 */
 	public static PoolBall create(int ballNum) {
 		PoolBall ball = balls[ballNum];
-		return new PoolBall(ball.translation.x, ball.translation.y, ball.translation.z,
-				ball.hue, ball.type, ballNum);
+		return new PoolBall(ball.translation.x, ball.translation.y,
+				ball.translation.z, ball.hue, ball.type, ballNum);
 	}
 
 	/**
@@ -164,12 +178,12 @@ public class PoolBall {
 		for (int i = 0; i < retVal.length; i++) {
 			retVal[i] = PoolBall.create(i);
 			if (i != 8 && i != 0) { // The two balls w/ set posns
-				retVal[i].translation = new Vector3d(rackLocations.get(counter++));
+				retVal[i].setTranslation(new Vector3d(rackLocations.get(counter++)));
 			}
 		}
 
-		retVal[0].translation = new Vector3d(10, 0, 0);
-		retVal[8].translation = new Vector3d(0, 0, 0);
+		retVal[0].setTranslation(new Vector3d(10, 0, 0));
+		retVal[8].setTranslation(new Vector3d( 0, 0, 0));
 
 		return retVal;
 	}
@@ -209,8 +223,8 @@ public class PoolBall {
 
 	@Override
 	public Object clone() {
-		return new PoolBall(translation.x, translation.y, translation.z,
-				hue, type, ballNum);
+		return new PoolBall(translation.x, translation.y,
+				translation.z, hue, type, ballNum);
 	}
 
 }

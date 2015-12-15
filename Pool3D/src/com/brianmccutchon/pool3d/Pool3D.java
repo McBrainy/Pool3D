@@ -110,9 +110,9 @@ public class Pool3D {
 
 	private void updateGraphics() {
 		for (PoolBall b : balls) {
-			Transform3D trans = new Transform3D();
-			trans.set(b.getTranslation());
-			ballsToSpheres.get(b).setTransform(trans);
+//			Transform3D trans = new Transform3D();
+//			trans.set(b.getTranslation());
+			ballsToSpheres.get(b).setTransform(b.transform);
 		}
 	}
 
