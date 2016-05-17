@@ -11,6 +11,16 @@ graphics is done, the game still needs the addition of pockets and simple game
 mechanics to be fully playable. (At present, it is more of a physics
 simulation.)
 
+## Controls
+
+- Use WASD to slide the camera vertically or horizontally.
+- Use the arrow keys to move forward and backward or rotate the camera.
+- Press Q to switch to shooting mode.
+  - In cue stick mode, use either WASD or the arrow keys to rotate around the
+	cue ball.
+  - Use spacebar to strike the cue ball and return to normal mode.
+  - Use Q again to return to normal mode.
+
 ## Requirements
 
 To run, you need JRE 1.8.0 or better. To build from source, you need JDK at
