@@ -42,6 +42,6 @@ mvn install:install-file -DgroupId=java3d -DartifactId=j3d-core \
 ```
 This installs the Java3D jars in your Maven local repository. You can now build
 the project with typical Maven commands, such as `mvn compile`, run in the same
-directory as the pom.xml. Running `mvn install` will also build a jar with
+directory as the pom.xml. Running `mvn package` will also build a jar with
 dependencies using the Maven assembly plugin. Note, however, that the pom.xml
 file is not located in the repository root, but in `Pool3D/Pool3D`.
