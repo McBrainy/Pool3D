@@ -1,6 +1,6 @@
 package com.brianmccutchon.pool3d;
 
-import javax.vecmath.*;
+import org.scijava.vecmath.*;
 
 /**
  * This is a purely static class containing information related to the physics

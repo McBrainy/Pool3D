@@ -2,8 +2,8 @@ package com.brianmccutchon.pool3d;
 
 import java.util.*;
 
-import javax.media.j3d.Transform3D;
-import javax.vecmath.*;
+import org.scijava.java3d.Transform3D;
+import org.scijava.vecmath.*;
 
 import static com.brianmccutchon.pool3d.BallType.*;
 import static java.awt.Color.*;

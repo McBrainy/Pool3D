@@ -1,7 +1,7 @@
 package com.brianmccutchon.pool3d;
 
 import static org.junit.Assert.*;
-import javax.vecmath.*;
+import org.scijava.vecmath.*;
 
 import org.junit.Test;
 

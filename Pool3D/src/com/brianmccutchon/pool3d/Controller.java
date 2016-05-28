@@ -8,8 +8,8 @@ import java.awt.event.KeyEvent;
 import java.util.HashMap;
 import java.util.HashSet;
 
-import javax.media.j3d.*;
-import javax.vecmath.*;
+import org.scijava.java3d.*;
+import org.scijava.vecmath.*;
 
 public class Controller {
 	private static final double MOVE_SPEED = 0.5;

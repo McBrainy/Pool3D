@@ -5,13 +5,13 @@ import java.awt.image.BufferedImage;
 import java.util.Arrays;
 import java.util.HashMap;
 
-import javax.media.j3d.*;
 import javax.swing.*;
-import javax.vecmath.*;
 
-import com.sun.j3d.utils.geometry.*;
-import com.sun.j3d.utils.image.TextureLoader;
-import com.sun.j3d.utils.universe.*;
+import org.scijava.java3d.*;
+import org.scijava.java3d.utils.geometry.*;
+import org.scijava.java3d.utils.image.TextureLoader;
+import org.scijava.java3d.utils.universe.*;
+import org.scijava.vecmath.*;
 
 import static com.brianmccutchon.pool3d.Physics.*;
 
